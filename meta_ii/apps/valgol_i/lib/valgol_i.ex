@@ -4,7 +4,7 @@ defmodule ValgolI do
   def parse(src) when is_binary(src) do
     src
     |> String.split("\n")
-    |> parse(%{instructions: [], address: 0, labels: %{}})
+    |> parse(%{address: 0, instructions: %{}, labels: %{}})
   end
   defp parse([h | t], context) do
     if String.trim(h) == "" do
@@ -13,25 +13,34 @@ defmodule ValgolI do
       case h |> String.trim_trailing |> parse_line do
 	{:op, code} ->
 	  parse(t, %{context |
-		     instructions: [code | context.instructions],
-		     address: next_address(context.address)})
+		     instructions: Map.put_new(context.instructions, context.address, code),
+		     address: next_address(context.address, code)})
 	{:label, label} ->
+	  # TODO: ensure label isn't already used
 	  parse(t, %{context |
 		     labels: Map.put_new(context.labels, label, context.address)})
 	{:error, reason} -> {:error, reason}
       end
     end
   end
-  defp parse([], context) do
-    %{context | instructions: Enum.reverse(context.instructions)}
-  end
+  defp parse([], context), do: context
 
   defp dereference_labels(assembly) do
     IO.inspect assembly
     {:error, "TODO"}
   end
 
-  defp next_address(addr), do: addr + @bytes_per_word
+  defp next_address(addr, :equal), do: addr + 1
+  defp next_address(addr, :multiply), do: addr + 1
+  defp next_address(addr, :add), do: addr + 1
+  defp next_address(addr, :subtract), do: addr + 1
+  defp next_address(addr, :print), do: addr + 1
+  defp next_address(addr, :halt), do: addr + 1
+  defp next_address(addr, {:block, n}), do: addr + (n * 8)
+  defp next_address(addr, {:load_literal, _}), do: addr + 9
+  defp next_address(addr, {:edit, _}), do: addr + 2
+  defp next_address(addr, {:space, n}), do: addr + n
+  defp next_address(addr, _code), do: addr + @bytes_per_word
 
   def parse_line(" " <> op) do
     case parse_op(op) do
