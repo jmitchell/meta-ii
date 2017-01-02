@@ -45,21 +45,21 @@ defmodule ValgolI do
   end
 
   defp parse_op(" " <> op), do: parse_op(op)
-  defp parse_op("LD  " <> loc), do: {:load, {:location, loc}}
+  defp parse_op("LD  " <> loc), do: parse_location(:load, loc)
   defp parse_op("LDL " <> lit) do
     case Float.parse(lit) do
       {num, _} -> {:load_literal, num}
       _ -> {:error, "LDL opcode expects a literal number argument, not '#{lit}'."}
     end
   end
-  defp parse_op("ST  " <> loc), do: {:store, {:location, loc}}
+  defp parse_op("ST  " <> loc), do: parse_location(:store, loc)
   defp parse_op("ADD"), do: :add
   defp parse_op("SUB"), do: :subtract
   defp parse_op("MLT"), do: :multiply
   defp parse_op("EQU"), do: :equal
-  defp parse_op("B   " <> loc), do: {:branch, {:location, loc}}
-  defp parse_op("BFP " <> loc), do: {:branch_false, {:location, loc}}
-  defp parse_op("BTP " <> loc), do: {:branch_true, {:location, loc}}
+  defp parse_op("B   " <> loc), do: parse_location(:branch, loc)
+  defp parse_op("BFP " <> loc), do: parse_location(:branch_false, loc)
+  defp parse_op("BTP " <> loc), do: parse_location(:branch_true, loc)
   defp parse_op("EDT " <> str), do: {:edit, str}
   defp parse_op("PNT"), do: :print
   defp parse_op("HLT"), do: :halt
@@ -77,4 +77,11 @@ defmodule ValgolI do
   end
   defp parse_op("END"), do: :end
   defp parse_op(x), do: {:error, "Unrecognized assembly op code: #{x}"}
+
+  defp parse_location(op, loc) do
+    case Integer.parse(loc, 10) do
+      {addr, _} -> {op, {:address, addr}}
+      _ -> {op, {:label_ref, loc}}
+    end
+  end
 end
