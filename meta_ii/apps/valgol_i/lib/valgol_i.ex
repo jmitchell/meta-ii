@@ -54,14 +54,14 @@ defmodule ValgolI do
   defp next_address(addr, {:space, n}), do: addr + n
   defp next_address(addr, _code), do: addr + @bytes_per_word
 
-  def parse_line(" " <> op) do
+  defp parse_line(" " <> op) do
     case parse_op(op) do
       {:error, reason} -> {:error, reason}
       :error -> {:error, "Encountered some kind of error"}
       op_code -> {:op, op_code}
     end
   end
-  def parse_line(label) do
+  defp parse_line(label) do
     {:label, label}
   end
 
