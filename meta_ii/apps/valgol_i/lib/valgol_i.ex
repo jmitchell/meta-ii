@@ -5,6 +5,7 @@ defmodule ValgolI do
     src
     |> String.split("\n")
     |> parse(%{address: 0, instructions: %{}, labels: %{}})
+    |> dereference_labels
   end
   defp parse([h | t], context) do
     if String.trim(h) == "" do
@@ -25,7 +26,7 @@ defmodule ValgolI do
   end
   defp parse([], context), do: context
 
-  def dereference_labels(assembly) do
+  defp dereference_labels(assembly) do
     deref = fn
       {addr, {op, {:label_ref, ref}}} ->
 	case Map.get(assembly.labels, ref) do
@@ -35,10 +36,7 @@ defmodule ValgolI do
       other -> other
     end
 
-    %{assembly |
-      instructions: assembly.instructions
-      |> Enum.map(deref)
-      |> Enum.into(%{})}
+    assembly.instructions |> Enum.map(deref) |> Enum.into(%{})
   end
 
   defp next_address(addr, :equal), do: addr + 1
