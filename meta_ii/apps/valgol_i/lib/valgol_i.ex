@@ -25,9 +25,20 @@ defmodule ValgolI do
   end
   defp parse([], context), do: context
 
-  defp dereference_labels(assembly) do
-    IO.inspect assembly
-    {:error, "TODO"}
+  def dereference_labels(assembly) do
+    deref = fn
+      {addr, {op, {:label_ref, ref}}} ->
+	case Map.get(assembly.labels, ref) do
+	  nil -> {:error, "Unrecognized label reference: '#{ref}'"}
+	  label_addr -> {addr, {op, {:address, label_addr}}}
+	end
+      other -> other
+    end
+
+    %{assembly |
+      instructions: assembly.instructions
+      |> Enum.map(deref)
+      |> Enum.into(%{})}
   end
 
   defp next_address(addr, :equal), do: addr + 1
@@ -36,6 +47,7 @@ defmodule ValgolI do
   defp next_address(addr, :subtract), do: addr + 1
   defp next_address(addr, :print), do: addr + 1
   defp next_address(addr, :halt), do: addr + 1
+  defp next_address(addr, :end), do: addr + 1
   defp next_address(addr, {:block, n}), do: addr + (n * 8)
   defp next_address(addr, {:load_literal, _}), do: addr + 9
   defp next_address(addr, {:edit, _}), do: addr + 2
