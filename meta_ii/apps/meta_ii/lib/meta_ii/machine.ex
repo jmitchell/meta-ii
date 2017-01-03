@@ -9,9 +9,7 @@ defmodule MetaII.Machine do
   def step(state, {:test, str}), do: match_input(state, str)
   def step(state, :identifier), do: match_input(state, ~S(\p{L}\p{Xan}*))
   def step(state, :number), do: match_input(state, ~S(\d+))
-  # def step(state, :string) do
-
-  # end
+  def step(state, :string), do: match_input(state, ~S('[^']*'))
   # def step(state, {:call, address}) do
 
   # end

@@ -40,5 +40,15 @@ defmodule MetaII.Machine.Test do
       assert %{input: ".01 .", switch: false} = actual
     end
 
+    test "string: input starts with a string" do
+      actual = Machine.step(%{input: "  'i am a string.' ..after"}, :string)
+      assert %{input: " ..after", switch: true} = actual
+    end
+
+    test "string: input doesn't start with a string" do
+      actual = Machine.step(%{input: "  'missing an endqoute..."}, :string)
+      assert %{input: "'missing an endqoute...", switch: false} = actual
+    end
+
   end
 end
