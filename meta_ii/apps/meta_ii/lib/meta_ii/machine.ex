@@ -1,9 +1,17 @@
 defmodule MetaII.Machine do
   @bytes_per_instruction 4
-  
+
+  def parse(src) do
+    {:error, "TODO: parse src to produce a state Map"}
+  end
+
+  def interpret(state) do
+    state |> step |> interpret
+  end
+
   def step(state) do
     case read_current_op(state) do
-      {:ok, op} -> state |> step(op) |> step
+      {:ok, op} -> step(state, op)
       error -> error
     end
   end
