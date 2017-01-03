@@ -11,15 +11,23 @@ defmodule MetaII.Machine.Test do
     end
 
     test "test: input matches argument string" do
-      %{input: "rld", switch: true} =
-	%{input: "  hello world"}
-	|> Machine.step({:test, "hello wo"})
+      actual = Machine.step(%{input: "  hello world"}, {:test, "hello wo"})
+      assert %{input: "rld", switch: true} = actual
     end
 
     test "test: input doesn't match argument string" do
-      %{switch: false} =
-	%{input: "  hello world"}
-	|> Machine.step({:test, "bye"})
+      actual = Machine.step(%{input: "  hello world"}, {:test, "bye"})
+      assert %{input: "hello world", switch: false} = actual
+    end
+
+    test "identifier: input starts with an identifier" do
+      actual = Machine.step(%{input: "  abc123 ...after"}, :identifier)
+      assert %{input: " ...after", switch: true} = actual
+    end
+
+    test "identifier: input doesn't start with an identifier" do
+      actual = Machine.step(%{input: "  5abc123 ."}, :identifier)
+      assert %{input: "5abc123 .", switch: false} = actual
     end
   end
 end

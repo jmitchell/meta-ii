@@ -7,7 +7,7 @@ defmodule MetaII.Machine do
     end
   end
   def step(state, {:test, str}) do
-    input = state[:input] |> String.trim_leading
+    input = trimmed_input(state)
 
     if String.starts_with?(input, str) do
       prefix_len = byte_size(str)
@@ -18,12 +18,20 @@ defmodule MetaII.Machine do
       |> update(:switch, true)
     else
       state
+      |> update(:input, input)
       |> update(:switch, false)
     end
   end
-  # def step(state, :identifier) do
+  def step(state, :identifier) do
+    input = trimmed_input(state)
+    new_input =
+      ~r/\A\s*\p{L}\p{Xan}*/
+      |> Regex.replace(input, "")
 
-  # end
+    state
+    |> update(:input, new_input)
+    |> update(:switch, new_input != input)
+  end
   # def step(state, :number) do
 
   # end
@@ -84,4 +92,6 @@ defmodule MetaII.Machine do
   end
 
   defp update(state, key, val), do: Map.put(state, key, val)
+
+  defp trimmed_input(state), do: String.trim_leading(state[:input])
 end
