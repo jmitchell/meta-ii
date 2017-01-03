@@ -40,6 +40,7 @@ defmodule ValgolI do
       |> Map.put_new(:output, [])
 
     op = Map.get(state[:memory], state[:pc])
+    IO.puts "pc: #{state[:pc]}; op: #{inspect op}"
 
     update = fn state, kw, update_fn ->
       {_, new_state} = Map.get_and_update(state, kw, fn val -> {val, update_fn.(val)} end)
@@ -48,13 +49,15 @@ defmodule ValgolI do
     advance_pc = state |> update.(:pc, fn pc ->
       next_instruction_addr(pc, op)
     end)
+    branch_when = &(state |> update.(:pc, fn pc -> if &1 do &2 else next_instruction_addr(pc, op) end end))
+
     pop_stack = &(&1 |> update.(:stack, fn s -> tl s end))
 
     case op do
       nil ->
 	advance_pc |> step
       {:branch, addr} ->
-	advance_pc |> step
+	branch_when.(true, addr) |> step
       {:block, n} ->
 	advance_pc |> step
       {:load_literal, n} ->
@@ -76,8 +79,11 @@ defmodule ValgolI do
 	end)
 	|> step
       {:branch_true, addr} ->
-	advance_pc
-	|> update.(:pc, &(if hd(state[:stack]) != 0 do addr else &1 end))
+	branch_when.(hd(state[:stack]) != 0, addr)
+	|> pop_stack.()
+	|> step
+      {:branch_false, addr} ->
+	branch_when.(hd(state[:stack]) == 0, addr)
 	|> pop_stack.()
 	|> step
       :add ->
@@ -95,12 +101,20 @@ defmodule ValgolI do
       {:edit, s} ->
 	advance_pc
 	|> update.(:print_area, fn pa ->
-	  # TODO: handle buffer overflow case.
-	  n = state[:stack] |> hd |> round
-	  String.slice(pa, 0, n) <> s <> String.slice(pa, n + String.length(s), String.length(pa) - (n + String.length(s)))
+	  i = state[:stack] |> hd |> round
+	  j = i + String.length(s)
+	  case (String.length(pa) - j) do
+	    n when is_integer(n) and n < 0 -> pa
+	    n when is_integer(n) ->
+	      front = String.slice(pa, 0, i)
+	      back = String.slice(pa, j, n)
+	      front <> s <> back
+	  end
 	end)
 	|> step
       :print ->
+	IO.puts "Executing print. Print area: #{inspect state[:print_area]}"
+
 	advance_pc
 	|> update.(:output, &[&1 | [state[:print_area] <> "\n"]])
 	|> update.(:print_area, fn _ -> clean_print_area end)
