@@ -1,6 +1,8 @@
-defmodule ValgolITest do
+defmodule ValgolIMachineTest do
   use ExUnit.Case
-  doctest ValgolI
+  doctest ValgolI.Machine
+
+  alias ValgolI.Machine
 
   @example_program """
          B   A01
@@ -96,12 +98,12 @@ defmodule ValgolITest do
   """
 
   test "parse example program" do
-    asm = @example_program |> ValgolI.parse
+    asm = @example_program |> Machine.parse
     assert asm == @parsed_program
   end
 
   test "interpret example program" do
-    state = @parsed_program |> ValgolI.interpret
+    state = @parsed_program |> Machine.interpret
     assert state[:output] == @program_output
   end
 end
