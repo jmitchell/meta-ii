@@ -1,6 +1,6 @@
-defmodule MetaIiTest do
+defmodule MetaIITest do
   use ExUnit.Case
-  doctest MetaIi
+  doctest MetaII
 
   test "the truth" do
     assert 1 + 1 == 2

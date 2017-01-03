@@ -1,4 +1,4 @@
-defmodule MetaIi.Mixfile do
+defmodule MetaII.Mixfile do
   use Mix.Project
 
   def project do
