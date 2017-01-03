@@ -29,5 +29,16 @@ defmodule MetaII.Machine.Test do
       actual = Machine.step(%{input: "  5abc123 ."}, :identifier)
       assert %{input: "5abc123 .", switch: false} = actual
     end
+
+    test "number: input starts with a number" do
+      actual = Machine.step(%{input: "  12345 ...after"}, :number)
+      assert %{input: " ...after", switch: true} = actual
+    end
+
+    test "number: input doesn't start with a number" do
+      actual = Machine.step(%{input: "  .01 ."}, :number)
+      assert %{input: ".01 .", switch: false} = actual
+    end
+
   end
 end

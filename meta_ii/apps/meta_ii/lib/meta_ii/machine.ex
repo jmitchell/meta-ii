@@ -6,35 +6,9 @@ defmodule MetaII.Machine do
       error -> error
     end
   end
-  def step(state, {:test, str}) do
-    input = trimmed_input(state)
-
-    if String.starts_with?(input, str) do
-      prefix_len = byte_size(str)
-      <<_::binary-size(prefix_len), new_input::binary>> = input
-
-      state
-      |> update(:input, new_input)
-      |> update(:switch, true)
-    else
-      state
-      |> update(:input, input)
-      |> update(:switch, false)
-    end
-  end
-  def step(state, :identifier) do
-    input = trimmed_input(state)
-    new_input =
-      ~r/\A\s*\p{L}\p{Xan}*/
-      |> Regex.replace(input, "")
-
-    state
-    |> update(:input, new_input)
-    |> update(:switch, new_input != input)
-  end
-  # def step(state, :number) do
-
-  # end
+  def step(state, {:test, str}), do: match_input(state, str)
+  def step(state, :identifier), do: match_input(state, ~S(\p{L}\p{Xan}*))
+  def step(state, :number), do: match_input(state, ~S(\d+))
   # def step(state, :string) do
 
   # end
@@ -94,4 +68,21 @@ defmodule MetaII.Machine do
   defp update(state, key, val), do: Map.put(state, key, val)
 
   defp trimmed_input(state), do: String.trim_leading(state[:input])
+
+  defp match_input(state, re_str) do
+    input = trimmed_input(state)
+    re = ~r/\A#{re_str}/
+    new_input = Regex.replace(re, input, "", global: false)
+
+    # IO.puts """
+    # input: #{input}
+    # new_input: #{new_input}
+    # regex: #{inspect re}
+    # match?: #{Regex.match? re, input}
+    # """
+
+    state
+    |> update(:input, new_input)
+    |> update(:switch, new_input != input)
+  end
 end
