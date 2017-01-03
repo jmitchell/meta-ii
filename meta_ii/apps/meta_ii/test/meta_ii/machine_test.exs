@@ -11,8 +11,8 @@ defmodule MetaII.Machine.Test do
     end
 
     test "test: input matches argument string" do
-      actual = Machine.step(%{input: "  hello world"}, {:test, "hello wo"})
-      assert %{input: "rld", switch: true} = actual
+      actual = Machine.step(%{input: "  hello world", pc: 12}, {:test, "hello wo"})
+      assert %{input: "rld", switch: true, pc: 16} = actual
     end
 
     test "test: input doesn't match argument string" do
@@ -89,5 +89,30 @@ defmodule MetaII.Machine.Test do
       assert %{pc: 36,
 	       stack: [:filler]} = actual
     end
+
+    test "set: turn branch switch on" do
+      assert %{switch: true} = %{switch: false} |> Machine.step(:set)
+      assert %{switch: true} = %{switch: true} |> Machine.step(:set)
+    end
+
+    test "branch: set program counter to specified address" do
+      assert %{pc: 64} = %{pc: 100} |> Machine.step({:branch, 64})
+    end
+
+    test "branch_true: set program counter to specified address" do
+      assert %{pc: 64} = %{pc: 100, switch: true} |> Machine.step({:branch_true, 64})
+      assert %{pc: 104} = %{pc: 100, switch: false} |> Machine.step({:branch_true, 64})
+    end
+
+    test "branch_false: set program counter to specified address" do
+      assert %{pc: 64} = %{pc: 100, switch: false} |> Machine.step({:branch_false, 64})
+      assert %{pc: 104} = %{pc: 100, switch: true} |> Machine.step({:branch_false, 64})
+    end
+
+    test "branch_error: halt when switch is off" do
+      assert {:halt, _} = %{switch: false} |> Machine.step(:branch_error)
+      assert %{pc: 36} = %{pc: 32, switch: true} |> Machine.step(:branch_error)
+    end
+
   end
 end

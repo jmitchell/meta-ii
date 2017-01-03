@@ -7,10 +7,10 @@ defmodule MetaII.Machine do
       error -> error
     end
   end
-  def step(state, {:test, str}), do: match_input(state, str)
-  def step(state, :identifier), do: match_input(state, ~S(\p{L}\p{Xan}*))
-  def step(state, :number), do: match_input(state, ~S(\d+))
-  def step(state, :string), do: match_input(state, ~S('[^']*'))
+  def step(state, {:test, str}), do: match_input(state, str) |> increment_pc
+  def step(state, :identifier), do: match_input(state, ~S(\p{L}\p{Xan}*)) |> increment_pc
+  def step(state, :number), do: match_input(state, ~S(\d+)) |> increment_pc
+  def step(state, :string), do: match_input(state, ~S('[^']*')) |> increment_pc
   def step(%{pc: pc, stack: stk} = state, {:call, address}) do
     exit_addr = pc + @bytes_per_instruction
     new_stack =
@@ -36,23 +36,21 @@ defmodule MetaII.Machine do
       _ -> {:error, "Invalid stack :push_count: #{n}"}
     end
   end
-
-
-  # def step(state, :set) do
-
-  # end
-  # def step(state, {:branch, address}) do
-
-  # end
-  # def step(state, {:branch_true, address}) do
-
-  # end
-  # def step(state, {:branch_false, address}) do
-
-  # end
-  # def step(state, :branch_error) do
-
-  # end
+  def step(state, :set) do
+    state |> update(:switch, true) |> increment_pc
+  end
+  def step(state, {:branch, address}) do
+    state |> update(:pc, address)
+  end
+  def step(%{switch: sw} = state, {:branch_true, address}) do
+    if sw do state |> update(:pc, address) else state |> increment_pc end
+  end
+  def step(%{switch: sw} = state, {:branch_false, address}) do
+    if sw do state |> increment_pc else state |> update(:pc, address) end
+  end
+  def step(%{switch: sw} = state, :branch_error) do
+    if sw do state |> increment_pc else {:halt, "Branched to error with state:\n#{inspect state}"} end
+  end
   # def step(state, {:copy_literal, str}) do
 
   # end
@@ -104,5 +102,9 @@ defmodule MetaII.Machine do
     state
     |> update(:input, new_input)
     |> update(:switch, new_input != input)
+  end
+
+  defp increment_pc(state) do
+    state |> update(:pc, Map.get(state, :pc, 0) + @bytes_per_instruction)
   end
 end
