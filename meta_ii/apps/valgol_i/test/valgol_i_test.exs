@@ -63,32 +63,36 @@ defmodule ValgolITest do
   }
 
   @program_output """
-  *
-  *
-  *
+   *
+   *
    *
     *
      *
       *
        *
+        *
          *
            *
              *
                *
-                  *
-                     *
-                        *
-                           *
-                              *
-                                 *
-                                     *
-                                         *
-                                             *
-                                                 *
-                                                      *
-                                                           *
-                                                                *
-                                                                     *
+                 *
+                    *
+                       *
+                          *
+                             *
+                                *
+                                   *
+                                       *
+                                           *
+                                               *
+                                                   *
+                                                        *
+                                                             *
+                                                                  *
+                                                                       *
+                                                                            *
+                                                                                 *
+                                                                                       *
   """
 
   test "parse example program" do

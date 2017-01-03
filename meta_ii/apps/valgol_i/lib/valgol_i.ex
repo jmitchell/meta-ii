@@ -1,6 +1,6 @@
 defmodule ValgolI do
   @bytes_per_word 4
-  @print_area_size 80
+  @print_area_size 100
 
   def parse(src) when is_binary(src) do
     src
@@ -31,7 +31,7 @@ defmodule ValgolI do
     step(%{memory: memory})
   end
 
-  defp step(state \\ %{}) do
+  defp step(state) when is_map(state) do
     state =
       state
       |> Map.put_new(:pc, 0)
@@ -40,7 +40,6 @@ defmodule ValgolI do
       |> Map.put_new(:output, [])
 
     op = Map.get(state[:memory], state[:pc])
-    IO.puts "pc: #{state[:pc]}; op: #{inspect op}"
 
     update = fn state, kw, update_fn ->
       {_, new_state} = Map.get_and_update(state, kw, fn val -> {val, update_fn.(val)} end)
@@ -58,7 +57,7 @@ defmodule ValgolI do
 	advance_pc |> step
       {:branch, addr} ->
 	branch_when.(true, addr) |> step
-      {:block, n} ->
+      {:block, _n} ->
 	advance_pc |> step
       {:load_literal, n} ->
       	advance_pc |> update.(:stack, &[n | &1]) |> step
@@ -75,7 +74,8 @@ defmodule ValgolI do
       :equal ->
 	advance_pc
 	|> update.(:stack, fn [a,b | c] ->
-	  [if a == b do 1 else 0 end | c]
+	  precision = 3
+	  [if Float.round(a, precision) == Float.round(b, precision) do 1 else 0 end | c]
 	end)
 	|> step
       {:branch_true, addr} ->
@@ -113,10 +113,8 @@ defmodule ValgolI do
 	end)
 	|> step
       :print ->
-	IO.puts "Executing print. Print area: #{inspect state[:print_area]}"
-
 	advance_pc
-	|> update.(:output, &[&1 | [state[:print_area] <> "\n"]])
+	|> update.(:output, &[&1 | [String.trim_trailing(state[:print_area]) <> "\n"]])
 	|> update.(:print_area, fn _ -> clean_print_area end)
 	|> step
       :halt ->
