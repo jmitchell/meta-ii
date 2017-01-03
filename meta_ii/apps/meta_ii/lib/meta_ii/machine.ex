@@ -1,5 +1,6 @@
 defmodule MetaII.Machine do
-
+  @bytes_per_instruction 4
+  
   def step(state) do
     case read_current_op(state) do
       {:ok, op} -> state |> step(op) |> step
@@ -10,12 +11,33 @@ defmodule MetaII.Machine do
   def step(state, :identifier), do: match_input(state, ~S(\p{L}\p{Xan}*))
   def step(state, :number), do: match_input(state, ~S(\d+))
   def step(state, :string), do: match_input(state, ~S('[^']*'))
-  # def step(state, {:call, address}) do
+  def step(%{pc: pc, stack: stk} = state, {:call, address}) do
+    exit_addr = pc + @bytes_per_instruction
+    new_stack =
+      case stk do
+	[nil, nil | s] ->
+	  [nil, nil, %{push_count: 1, exit: exit_addr} | s]
+	s ->
+	  [nil, nil, %{push_count: 3, exit: exit_addr} | s]
+      end
+    %{state | pc: address, stack: new_stack}
+  end
+  def step(%{pc: pc, stack: [a, b, %{push_count: n, exit: addr} | stk]} = state, :return) do
+    case n do
+      1 -> %{state | pc: addr, stack: [nil, nil | stk]}
+      3 -> %{state | pc: addr, stack: stk}
+      _ -> {:error, "Invalid stack :push_count: #{n}"}
+    end
+  end
+  def step(%{pc: pc, stack: [a, b, %{push_count: n, exit: addr}]} = state, :return) do
+    case n do
+      1 -> %{state | pc: addr, stack: [nil, nil]}
+      3 -> %{state | pc: addr, stack: []}
+      _ -> {:error, "Invalid stack :push_count: #{n}"}
+    end
+  end
 
-  # end
-  # def step(state, :return) do
 
-  # end
   # def step(state, :set) do
 
   # end

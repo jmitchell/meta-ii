@@ -50,5 +50,44 @@ defmodule MetaII.Machine.Test do
       assert %{input: "'missing an endqoute...", switch: false} = actual
     end
 
+    test "call: enter subroutine at address when stack has two blanks" do
+      actual = %{
+	pc: 32,
+	memory: %{16 => :dummy_subroutine},
+	stack: [nil, nil, :filler],
+      } |> Machine.step({:call, 16})
+      assert %{pc: 16,
+	       stack: [nil, nil, %{push_count: 1, exit: 32 + 4}, :filler]} = actual
+    end
+
+    test "call: enter subroutine at address when stack doesn't have two blanks" do
+      actual = %{
+	pc: 32,
+	memory: %{16 => :dummy_subroutine},
+	stack: [:filler],
+      } |> Machine.step({:call, 16})
+      assert %{pc: 16,
+	       stack: [nil, nil, %{push_count: 3, exit: 32 + 4}, :filler]} = actual
+    end
+
+    test "return: leave a subroutine when push_count == 1" do
+      actual = %{
+	pc: 16,
+	memory: %{16 => :dummy_subroutine},
+	stack: [:a, :b, %{push_count: 1, exit: 36}, :filler],
+      } |> Machine.step(:return)
+      assert %{pc: 36,
+	       stack: [nil, nil, :filler]} = actual
+    end
+
+    test "return: leave a subroutine when push_count == 3" do
+      actual = %{
+	pc: 16,
+	memory: %{16 => :dummy_subroutine},
+	stack: [:a, :b, %{push_count: 3, exit: 36}, :filler],
+      } |> Machine.step(:return)
+      assert %{pc: 36,
+	       stack: [:filler]} = actual
+    end
   end
 end
