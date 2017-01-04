@@ -60,11 +60,11 @@ defmodule MetaII.Machine do
     if sw do state |> increment_pc else {:halt, "Branched to error with state:\n#{inspect state}"} end
   end
   def step(state, {:copy_literal, str}) do
-    %{state | output: [Map.get(state, :output, []) | str <> " "]}
+    %{state | output: [Map.get(state, :output, []) | [str <> " "]]}
     |> increment_pc
   end
   def step(%{input: i} = state, :copy_input) do
-    %{state | output: [Map.get(state, :output, []) | i]}
+    %{state | output: [Map.get(state, :output, []) | [i]]}
     |> increment_pc
   end
   def step(state, :generate1) do
@@ -73,9 +73,9 @@ defmodule MetaII.Machine do
 
     case state do
       %{output: out, stack: [a, nil | c]} ->
-	%{state | output: [out | label <> " "], stack: [a, label | c]}
+	%{state | output: [out | [label <> " "]], stack: [a, label | c]}
       %{output: out, stack: [_, b | _]} ->
-	%{state | output: [out | b <> " "]}
+	%{state | output: [out | [b <> " "]]}
     end
     |> increment_pc
   end
@@ -85,9 +85,9 @@ defmodule MetaII.Machine do
 
     case state do
       %{output: out, stack: [nil, b | c]} ->
-	%{state | output: [out | label <> " "], stack: [label, b | c]}
+	%{state | output: [out | [label <> " "]], stack: [label, b | c]}
       %{output: out, stack: [a, _ | _]} ->
-	%{state | output: [out | a <> " "]}
+	%{state | output: [out | [a <> " "]]}
     end
     |> increment_pc
   end
@@ -108,9 +108,7 @@ defmodule MetaII.Machine do
   # def step(state, {:address, ident}) do
 
   # end
-  # def step(state, :end) do
-
-  # end
+  def step(state, :end), do: state
   def step(state, op) do
     {:error, "Unrecognized op #{inspect op}"}
   end

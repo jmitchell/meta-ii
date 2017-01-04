@@ -118,7 +118,7 @@ defmodule MetaII.Machine.Test do
       actual = %{
 	output: ["dummy "]
       } |> Machine.step({:copy_literal, "abc"})
-      assert %{output: [["dummy "] | "abc "]} = actual
+      assert %{output: [["dummy "] | ["abc "]]} = actual
     end
 
     test "copy_input: output the remaining input" do
@@ -126,7 +126,7 @@ defmodule MetaII.Machine.Test do
 	input: "the end.",
 	output: ["dummy "],
       } |> Machine.step(:copy_input)
-      assert %{output: [["dummy "] | "the end."]} = actual
+      assert %{output: [["dummy "] | ["the end."]]} = actual
     end
 
     test "generate1: generate and output a new label" do
@@ -135,7 +135,7 @@ defmodule MetaII.Machine.Test do
 	output: ["dummy "],
       } |> Machine.step(:generate1)
       assert %{stack: [:a, "A00", 1, 2, 3],
-	       output: [["dummy "] | "A00 "],
+	       output: [["dummy "] | ["A00 "]],
 	       gen: %{alpha_prefix: "A", n: 0}} = actual
     end
 
@@ -145,7 +145,7 @@ defmodule MetaII.Machine.Test do
 	output: ["dummy "],
       } |> Machine.step(:generate2)
       assert %{stack: ["A00", :b, 1, 2, 3],
-	       output: [["dummy "] | "A00 "],
+	       output: [["dummy "] | ["A00 "]],
 	       gen: %{alpha_prefix: "A", n: 0}} = actual
     end
 
