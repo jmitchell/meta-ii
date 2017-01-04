@@ -114,5 +114,55 @@ defmodule MetaII.Machine.Test do
       assert %{pc: 36} = %{pc: 32, switch: true} |> Machine.step(:branch_error)
     end
 
+    test "copy_literal: output variable length string" do
+      actual = %{
+	output: ["dummy "]
+      } |> Machine.step({:copy_literal, "abc"})
+      assert %{output: [["dummy "] | "abc "]} = actual
+    end
+
+    test "copy_input: output the remaining input" do
+      actual = %{
+	input: "the end.",
+	output: ["dummy "],
+      } |> Machine.step(:copy_input)
+      assert %{output: [["dummy "] | "the end."]} = actual
+    end
+
+    test "generate1: generate and output a new label" do
+      actual = %{
+	stack: [:a, nil, 1, 2, 3],
+	output: ["dummy "],
+      } |> Machine.step(:generate1)
+      assert %{stack: [:a, "A00", 1, 2, 3],
+	       output: [["dummy "] | "A00 "],
+	       gen: %{alpha_prefix: "A", n: 0}} = actual
+    end
+
+    test "generate2: generate and output a new label" do
+      actual = %{
+	stack: [nil, :b, 1, 2, 3],
+	output: ["dummy "],
+      } |> Machine.step(:generate2)
+      assert %{stack: ["A00", :b, 1, 2, 3],
+	       output: [["dummy "] | "A00 "],
+	       gen: %{alpha_prefix: "A", n: 0}} = actual
+    end
+
+    test "label: set output counter to card column 1" do
+      actual = %{
+	output_col: 5
+      } |> Machine.step(:label)
+      assert %{output_col: 1} = actual
+    end
+
+    test "output: punch card and reset output counter to card column 8." do
+      actual = %{
+	output: [[[["this "] | ["is "]] | ["a "]] | ["test "]],
+	output_col: 3,
+	card: "",
+      } |> Machine.step(:output)
+      assert %{card: "  this is a test ", output_col: 8} = actual
+    end
   end
 end

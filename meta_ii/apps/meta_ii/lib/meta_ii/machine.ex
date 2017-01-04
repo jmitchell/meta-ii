@@ -59,24 +59,49 @@ defmodule MetaII.Machine do
   def step(%{switch: sw} = state, :branch_error) do
     if sw do state |> increment_pc else {:halt, "Branched to error with state:\n#{inspect state}"} end
   end
-  # def step(state, {:copy_literal, str}) do
+  def step(state, {:copy_literal, str}) do
+    %{state | output: [Map.get(state, :output, []) | str <> " "]}
+    |> increment_pc
+  end
+  def step(%{input: i} = state, :copy_input) do
+    %{state | output: [Map.get(state, :output, []) | i]}
+    |> increment_pc
+  end
+  def step(state, :generate1) do
+    state = state |> generate_next
+    label = generated_label(state)
 
-  # end
-  # def step(state, :copy_input) do
+    case state do
+      %{output: out, stack: [a, nil | c]} ->
+	%{state | output: [out | label <> " "], stack: [a, label | c]}
+      %{output: out, stack: [_, b | _]} ->
+	%{state | output: [out | b <> " "]}
+    end
+  end
+  def step(state, :generate2) do
+    state = state |> generate_next
+    label = generated_label(state)
 
-  # end
-  # def step(state, :generate1) do
+    case state do
+      %{output: out, stack: [nil, b | c]} ->
+	%{state | output: [out | label <> " "], stack: [label, b | c]}
+      %{output: out, stack: [a, _ | _]} ->
+	%{state | output: [out | a <> " "]}
+    end
+  end
+  def step(state, :label) do
+    state |> update(:output_col, 1)
+  end
+  def step(state, :output) do
+    prefix =
+      String.duplicate(" ", Map.get(state, :output_col, 1) - 1)
+    card =
+      Map.get(state, :card, "") <> prefix <> output_string(state)
 
-  # end
-  # def step(state, :generate2) do
-
-  # end
-  # def step(state, :label) do
-
-  # end
-  # def step(state, :output) do
-
-  # end
+    state
+    |> update(:card, card)
+    |> update(:output_col, 8)
+  end
   # def step(state, {:address, ident}) do
 
   # end
@@ -114,5 +139,35 @@ defmodule MetaII.Machine do
 
   defp increment_pc(state) do
     state |> update(:pc, Map.get(state, :pc, 0) + @bytes_per_instruction)
+  end
+
+  defp generate_next(%{gen: %{alpha_prefix: s, n: n}} = state) do
+    if n <= 99 do
+      %{state | gen: %{alpha_prefix: s, n: n + 1}}
+    else
+      new_s =
+        if s < "Z" do
+	  to_string [s |> to_charlist |> List.first |> Kernel.+(1)]
+	else
+	  "A"
+	end
+      # TODO: prevent infinite loop by making longer `alpha_prefix`s
+      # as needed
+
+      %{state | gen: %{alpha_prefix: new_s, n: 0}}
+    end
+  end
+  defp generate_next(state) do
+    Map.put(state, :gen, %{alpha_prefix: "A", n: 0})
+  end
+
+  defp generated_label(%{gen: %{alpha_prefix: s, n: n}}) do
+    s <> (n |> Integer.to_string |> String.rjust(2, ?0))
+  end
+
+  defp output_string(state) do
+    Map.get(state, :output, [""])
+    |> List.flatten
+    |> Enum.join
   end
 end
