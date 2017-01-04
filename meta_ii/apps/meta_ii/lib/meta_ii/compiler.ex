@@ -21,6 +21,9 @@ defmodule MetaII.Compiler do
     $(EX3 .OUT('BE') / OUTPUT)
     .LABEL *1 .,
 
+    EX1 = EX2 $('/' .OUT('BT ' *1) EX2 )
+    .LABEL *1 .,
+
     ST = .ID .LABEL * '=' EX1
     '.,' .OUT('R').,
 
