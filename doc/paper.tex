@@ -1,6 +1,9 @@
 \documentclass[notitlepage,twocolumn]{report}
 \usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
 \usepackage{endnotes}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 
 \title{META II \\ \large A Syntax-Oriented Compiler Writing Language}
 \author{D. V. Schorre\footnote{Transcribed from http://www.ibm-1401.info/Meta-II-schorre.pdf in January 2017 by Jacob Mithcell.}}
@@ -781,86 +784,95 @@ $ ST '.END' .OUT('END').,
 \end{figure}
 
 
-\begin{figure}
-\caption{Order list of the META II machine}
-\begin{tabular}{lllp{7cm}}
-  TST & STRING & TEST & After deleting initial blanks in the input
-                        string, compare it to the string given as
-                        argument. If the comparison is met, delete
-                        matched portion from the input and set
-                        switch. If not met, reset switch. \\
-  ID & & IDENTIFIER & After deleting initial blanks in the input
-                      string, test if it begins with an identifier,
-                      ie., a letter followed by a sequence of letters
-                      and/or digits. If so, delete the identifier and
-                      set switch. If not, reset switch. \\
-  NUM & & NUMBER & After deleting initial blanks in the input string,
-                   test if it begins with a number. a number is a
-                   string of digits which may contain imbedded
-                   periods, but may not begin or end with a
-                   period. moreover, no two periods may be next to one
-                   another. If a number is found, delete it and set
-                   switch. If not, reset switch. \\
-  SR & & STRING & After deleting initial blanks in the input string,
-                  test if it begins with a string, ie., a single quote
-                  followed by a sequence of any characters other than
-                  single quote followed by another single quote. If a
-                  string is found, delete it and set switch. if not,
-                  reset switch. \\
-  CLL & AAA & CALL & Enter the subroutine beginning in location
-                     AAA. If the top two terms of the stack are blank,
-                     push the stack down by one cell. Otherwise, push
-                     it down by three cells. Set a flag in the stack
-                     to indicate whether it has been pushed by one or
-                     three cells. This flag and the exit address go
-                     into the third cell. Clear the top two cells to
-                     blanks to indicate that they can accept addresses
-                     which may be generated within the subroutine. \\
-  R & & RETURN & Return to the exit address, popping up the stack by
-                 one or three cells according to the flag. If the
-                 stack is popped by only one cell, then clear the top
-                 two cells to blanks, because they were blank when the
-                 subroutine was entered. \\
-  SET & & SET & Set branch switch on. \\
-  B & AAA & BRANCH & Branch unconditionally to location AAA. \\
-  BT & AAA & BRANCH IF TRUE & Branch to location AAA if switch is
-                              on. Otherwise, continue in sequence. \\
-  BF & AAA & BRANCH IF FALSE & Branch to location AAA if switch is
-                               off. Otherwise, continue in
-                               sequence. \\
-  BE & & BRANCH TO ERROR IF FALSE & Halt if switch is off. Otherwise,
-                                    continue in sequence. \\
-  CL & STRING & COPY LITERAL & Output the variable length string given
-                               as the argument. A blank character will
-                               be inserted in the output following the
-                               string. \\
-  CI & & COPY INPUT & Output the last sequence of characters from the
-                      input string. This command may not function
-                      properly if the last command which could cause
-                      deletion failed to do so. \\
-  GN1 & & GENERATE 1 & This concerns the current label 1 cell, ie.,
-                       the next to top cell in the stack, which is
-                       either clear or contains a generated label. If
-                       clear, generate a label and put it into that
-                       cell. Whether the label has just been put into
-                       the cell or was already there, output
-                       it. Finally, insert a blank character in the
-                       output following the label. \\
-  GN2 & & GENERATE 2 & Same as GN1, except that it concerns the
-                       current label 2 cell, ie., the top cell in the
-                       stack. \\
-  LB & & LABEL & Set the output counter to card column 1. \\
-  OUT & & OUTPUT & Punch card and reset output counter to card column
-                   8. \\
-\end{tabular}
-\begin{center}
-CONSTANT AND CONTROL CODES
-\end{center}
-\begin{tabular}{lllp{7cm}}
-  ADR & IDENT & ADDRESS & Produces the address which is assigned to
-                          the given identifier as a constant. \\
-  END & & END & Denotes the end of the program. \\
-\end{tabular}
+\begin{figure}[htb]
+  \caption{Order list of the META II machine}
+  \begin{subfigure}[b]{\textwidth}
+    \subcaption{MACHINE CODES}
+    \begin{tabular}{lllp{7cm}}
+      TST & STRING & TEST & After deleting initial blanks in the input
+                            string, compare it to the string given as
+                            argument. If the comparison is met, delete
+                            matched portion from the input and set
+                            switch. If not met, reset switch. \\
+      ID & & IDENTIFIER & After deleting initial blanks in the input
+                          string, test if it begins with an identifier,
+                          ie., a letter followed by a sequence of letters
+                          and/or digits. If so, delete the identifier and
+                          set switch. If not, reset switch. \\
+      NUM & & NUMBER & After deleting initial blanks in the input string,
+                       test if it begins with a number. a number is a
+                       string of digits which may contain imbedded
+                       periods, but may not begin or end with a
+                       period. moreover, no two periods may be next to one
+                       another. If a number is found, delete it and set
+                       switch. If not, reset switch. \\
+      SR & & STRING & After deleting initial blanks in the input string,
+                      test if it begins with a string, ie., a single quote
+                      followed by a sequence of any characters other than
+                      single quote followed by another single quote. If a
+                      string is found, delete it and set switch. if not,
+                      reset switch. \\
+      CLL & AAA & CALL & Enter the subroutine beginning in location
+                         AAA. If the top two terms of the stack are blank,
+                         push the stack down by one cell. Otherwise, push
+                         it down by three cells. Set a flag in the stack
+                         to indicate whether it has been pushed by one or
+                         three cells. This flag and the exit address go
+                         into the third cell. Clear the top two cells to
+                         blanks to indicate that they can accept addresses
+                         which may be generated within the subroutine. \\
+    \end{tabular}
+  \end{subfigure}
+\end{figure}
+\begin{figure}[htb]\ContinuedFloat
+  \begin{subfigure}[b]{\textwidth}
+    \begin{tabular}{lllp{7cm}}
+      R & & RETURN & Return to the exit address, popping up the stack by
+                     one or three cells according to the flag. If the
+                     stack is popped by only one cell, then clear the top
+                     two cells to blanks, because they were blank when the
+                     subroutine was entered. \\
+      SET & & SET & Set branch switch on. \\
+      B & AAA & BRANCH & Branch unconditionally to location AAA. \\
+      BT & AAA & BRANCH IF TRUE & Branch to location AAA if switch is
+                                  on. Otherwise, continue in sequence. \\
+      BF & AAA & BRANCH IF FALSE & Branch to location AAA if switch is
+                                   off. Otherwise, continue in
+                                   sequence. \\
+      BE & & BRANCH TO ERROR IF FALSE & Halt if switch is off. Otherwise,
+                                        continue in sequence. \\
+      CL & STRING & COPY LITERAL & Output the variable length string given
+                                   as the argument. A blank character will
+                                   be inserted in the output following the
+                                   string. \\
+      CI & & COPY INPUT & Output the last sequence of characters from the
+                          input string. This command may not function
+                          properly if the last command which could cause
+                          deletion failed to do so. \\
+      GN1 & & GENERATE 1 & This concerns the current label 1 cell, ie.,
+                           the next to top cell in the stack, which is
+                           either clear or contains a generated label. If
+                           clear, generate a label and put it into that
+                           cell. Whether the label has just been put into
+                           the cell or was already there, output
+                           it. Finally, insert a blank character in the
+                           output following the label. \\
+      GN2 & & GENERATE 2 & Same as GN1, except that it concerns the
+                           current label 2 cell, ie., the top cell in the
+                           stack. \\
+      LB & & LABEL & Set the output counter to card column 1. \\
+      OUT & & OUTPUT & Punch card and reset output counter to card column
+                       8. \\
+    \end{tabular}
+  \end{subfigure}
+  \begin{subfigure}[b]{\textwidth}
+    \subcaption{CONSTANT AND CONTROL CODES}
+    \begin{tabular}{lllp{7cm}}
+      ADR & IDENT & ADDRESS & Produces the address which is assigned to
+                              the given identifier as a constant. \\
+      END & & END & Denotes the end of the program. \\
+    \end{tabular}
+  \end{subfigure}
 \end{figure}
 
 
