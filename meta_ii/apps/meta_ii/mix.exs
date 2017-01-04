@@ -35,6 +35,6 @@ defmodule MetaII.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:valgol_i, in_umbrella: true, only: [:test]}]
   end
 end
