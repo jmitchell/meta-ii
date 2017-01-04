@@ -77,6 +77,7 @@ defmodule MetaII.Machine do
       %{output: out, stack: [_, b | _]} ->
 	%{state | output: [out | b <> " "]}
     end
+    |> increment_pc
   end
   def step(state, :generate2) do
     state = state |> generate_next
@@ -88,9 +89,10 @@ defmodule MetaII.Machine do
       %{output: out, stack: [a, _ | _]} ->
 	%{state | output: [out | a <> " "]}
     end
+    |> increment_pc
   end
   def step(state, :label) do
-    state |> update(:output_col, 1)
+    state |> update(:output_col, 1) |> increment_pc
   end
   def step(state, :output) do
     prefix =
@@ -101,6 +103,7 @@ defmodule MetaII.Machine do
     state
     |> update(:card, card)
     |> update(:output_col, 8)
+    |> increment_pc
   end
   # def step(state, {:address, ident}) do
 
