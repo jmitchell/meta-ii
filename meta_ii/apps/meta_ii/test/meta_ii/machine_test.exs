@@ -164,5 +164,18 @@ defmodule MetaII.Machine.Test do
       } |> Machine.step(:output)
       assert %{card: "  this is a test ", output_col: 8} = actual
     end
+
+    @tag :skip
+    test "address: produce the address which is assigned to the given identifier as a constant" do
+      flunk "need to make a second pass through the addressable memory"
+      # TODO: refactor META II interpreter so it operates on lines of
+      # source code instead of bytes of memory (e.g. remove
+      # @bytes_per_instruction).
+    end
+
+    test "end: denotes the end of the program" do
+      actual = %{dummy_state: [1,2,3]} |> Machine.step(:end)
+      assert %{dummy_state: [1,2,3]} = actual
+    end
   end
 end
