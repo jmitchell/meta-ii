@@ -13,15 +13,15 @@ defmodule ValgolI.Machine do
       parse(t, context)
     else
       case h |> String.trim_trailing |> parse_line do
-	{:op, code} ->
-	  parse(t, %{context |
-		     instructions: Map.put_new(context.instructions, context.address, code),
-		     address: next_instruction_addr(context.address, code)})
-	{:label, label} ->
-	  # TODO: ensure label isn't already used
-	  parse(t, %{context |
-		     labels: Map.put_new(context.labels, label, context.address)})
-	{:error, reason} -> {:error, reason}
+        {:op, code} ->
+          parse(t, %{context |
+                     instructions: Map.put_new(context.instructions, context.address, code),
+                     address: next_instruction_addr(context.address, code)})
+        {:label, label} ->
+          # TODO: ensure label isn't already used
+          parse(t, %{context |
+                     labels: Map.put_new(context.labels, label, context.address)})
+        {:error, reason} -> {:error, reason}
       end
     end
   end
@@ -54,80 +54,82 @@ defmodule ValgolI.Machine do
 
     case op do
       nil ->
-	advance_pc |> step
+        advance_pc |> step
       {:branch, addr} ->
-	branch_when.(true, addr) |> step
+        true |> branch_when.(addr) |> step
       {:block, _n} ->
-	advance_pc |> step
+        advance_pc |> step
       {:load_literal, n} ->
-      	advance_pc |> update.(:stack, &[n | &1]) |> step
+        advance_pc |> update.(:stack, &[n | &1]) |> step
       {:store, addr} ->
-	advance_pc
-	|> pop_stack.()
-	|> update.(:memory, &(Map.put(&1, addr, hd state[:stack])))
-	|> step
+        advance_pc
+        |> pop_stack.()
+        |> update.(:memory, &(Map.put(&1, addr, hd state[:stack])))
+        |> step
       {:load, addr} ->
-	case Map.get(state[:memory], addr) do
-	  nil -> {:error, "Nothing allocated to address #{addr}"}
-	  n -> advance_pc |> update.(:stack, &[n | &1]) |> step
-	end
+        case Map.get(state[:memory], addr) do
+          nil -> {:error, "Nothing allocated to address #{addr}"}
+          n -> advance_pc |> update.(:stack, &[n | &1]) |> step
+        end
       :equal ->
-	advance_pc
-	|> update.(:stack, fn [a,b | c] ->
-	  precision = 3
-	  [if Float.round(a, precision) == Float.round(b, precision) do 1 else 0 end | c]
-	end)
-	|> step
+        advance_pc
+        |> update.(:stack, fn [a,b | c] ->
+          precision = 3
+          [if Float.round(a, precision) == Float.round(b, precision) do 1 else 0 end | c]
+        end)
+        |> step
       {:branch_true, addr} ->
-	branch_when.(hd(state[:stack]) != 0, addr)
-	|> pop_stack.()
-	|> step
+        (hd(state[:stack]) != 0)
+        |> branch_when.(addr)
+        |> pop_stack.()
+        |> step
       {:branch_false, addr} ->
-	branch_when.(hd(state[:stack]) == 0, addr)
-	|> pop_stack.()
-	|> step
+        (hd(state[:stack]) == 0)
+        |> branch_when.(addr)
+        |> pop_stack.()
+        |> step
       :add ->
-	advance_pc
-	|> update.(:stack, fn [a,b | c] -> [a+b | c] end)
-	|> step
+        advance_pc
+        |> update.(:stack, fn [a, b | c] -> [a + b | c] end)
+        |> step
       :subtract ->
-	advance_pc
-	|> update.(:stack, fn [a,b | c] -> [b-a | c] end)
-	|> step
+        advance_pc
+        |> update.(:stack, fn [a, b | c] -> [b - a | c] end)
+        |> step
       :multiply ->
-	advance_pc
-	|> update.(:stack, fn [a,b | c] -> [a*b | c] end)
-	|> step
+        advance_pc
+        |> update.(:stack, fn [a, b | c] -> [a * b | c] end)
+        |> step
       {:edit, s} ->
-	advance_pc
-	|> update.(:print_area, fn pa ->
-	  i = state[:stack] |> hd |> round
-	  j = i + String.length(s)
-	  case (String.length(pa) - j) do
-	    n when is_integer(n) and n < 0 -> pa
-	    n when is_integer(n) ->
-	      front = String.slice(pa, 0, i)
-	      back = String.slice(pa, j, n)
-	      front <> s <> back
-	  end
-	end)
-	|> step
+        advance_pc
+        |> update.(:print_area, fn pa ->
+          i = state[:stack] |> hd |> round
+          j = i + String.length(s)
+          case (String.length(pa) - j) do
+            n when is_integer(n) and n < 0 -> pa
+            n when is_integer(n) ->
+              front = String.slice(pa, 0, i)
+              back = String.slice(pa, j, n)
+              front <> s <> back
+          end
+        end)
+        |> step
       :print ->
-	advance_pc
-	|> update.(:output, &[&1 | [String.trim_trailing(state[:print_area]) <> "\n"]])
-	|> update.(:print_area, fn _ -> clean_print_area end)
-	|> step
+        advance_pc
+        |> update.(:output, &[&1 | [String.trim_trailing(state[:print_area]) <> "\n"]])
+        |> update.(:print_area, fn _ -> clean_print_area end)
+        |> step
       :halt ->
-	advance_pc |> step
+        advance_pc |> step
       {:space, n} ->
-	state
-	|> update.(:pc, fn pc -> pc + n end)
-	|> step
+        state
+        |> update.(:pc, fn pc -> pc + n end)
+        |> step
       :end ->
-	state
+        state
         |> update.(:output, &(&1 |> List.flatten |> Enum.join))
       _ ->
-    	{:error, "Unsupported instruction: #{inspect op}"}
+        {:error, "Unsupported instruction: #{inspect op}"}
     end
   end
 
@@ -136,10 +138,10 @@ defmodule ValgolI.Machine do
   defp dereference_labels(assembly) do
     deref = fn
       {addr, {op, {:label_ref, ref}}} ->
-	case Map.get(assembly.labels, ref) do
-	  nil -> {:error, "Unrecognized label reference: '#{ref}'"}
-	  label_addr -> {addr, {op, label_addr}}
-	end
+        case Map.get(assembly.labels, ref) do
+          nil -> {:error, "Unrecognized label reference: '#{ref}'"}
+          label_addr -> {addr, {op, label_addr}}
+        end
       other -> other
     end
 

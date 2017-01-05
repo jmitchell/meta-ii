@@ -1,7 +1,7 @@
 defmodule MetaII.Machine do
   @bytes_per_instruction 4
 
-  def parse(src) do
+  def parse(_src) do
     {:error, "TODO: parse src to produce a state Map"}
   end
 
@@ -15,29 +15,29 @@ defmodule MetaII.Machine do
       error -> error
     end
   end
-  def step(state, {:test, str}), do: match_input(state, str) |> increment_pc
-  def step(state, :identifier), do: match_input(state, ~S(\p{L}\p{Xan}*)) |> increment_pc
-  def step(state, :number), do: match_input(state, ~S(\d+)) |> increment_pc
-  def step(state, :string), do: match_input(state, ~S('[^']*')) |> increment_pc
+  def step(state, {:test, str}), do: state |> match_input(str) |> increment_pc
+  def step(state, :identifier), do: state |> match_input(~S(\p{L}\p{Xan}*)) |> increment_pc
+  def step(state, :number), do: state |> match_input(~S(\d+)) |> increment_pc
+  def step(state, :string), do: state |> match_input(~S('[^']*')) |> increment_pc
   def step(%{pc: pc, stack: stk} = state, {:call, address}) do
     exit_addr = pc + @bytes_per_instruction
     new_stack =
       case stk do
-	[nil, nil | s] ->
-	  [nil, nil, %{push_count: 1, exit: exit_addr} | s]
-	s ->
-	  [nil, nil, %{push_count: 3, exit: exit_addr} | s]
+        [nil, nil | s] ->
+          [nil, nil, %{push_count: 1, exit: exit_addr} | s]
+        s ->
+          [nil, nil, %{push_count: 3, exit: exit_addr} | s]
       end
     %{state | pc: address, stack: new_stack}
   end
-  def step(%{pc: pc, stack: [a, b, %{push_count: n, exit: addr} | stk]} = state, :return) do
+  def step(%{stack: [_, _, %{push_count: n, exit: addr} | stk]} = state, :return) do
     case n do
       1 -> %{state | pc: addr, stack: [nil, nil | stk]}
       3 -> %{state | pc: addr, stack: stk}
       _ -> {:error, "Invalid stack :push_count: #{n}"}
     end
   end
-  def step(%{pc: pc, stack: [a, b, %{push_count: n, exit: addr}]} = state, :return) do
+  def step(%{pc: _, stack: [_, _, %{push_count: n, exit: addr}]} = state, :return) do
     case n do
       1 -> %{state | pc: addr, stack: [nil, nil]}
       3 -> %{state | pc: addr, stack: []}
@@ -73,11 +73,12 @@ defmodule MetaII.Machine do
 
     case state do
       %{output: out, stack: [a, nil | c]} ->
-	%{state | output: [out | [label <> " "]], stack: [a, label | c]}
+        %{state | output: [out | [label <> " "]], stack: [a, label | c]}
+        |> increment_pc
       %{output: out, stack: [_, b | _]} ->
-	%{state | output: [out | [b <> " "]]}
+        %{state | output: [out | [b <> " "]]}
+        |> increment_pc
     end
-    |> increment_pc
   end
   def step(state, :generate2) do
     state = state |> generate_next
@@ -85,9 +86,9 @@ defmodule MetaII.Machine do
 
     case state do
       %{output: out, stack: [nil, b | c]} ->
-	%{state | output: [out | [label <> " "]], stack: [label, b | c]}
+        %{state | output: [out | [label <> " "]], stack: [label, b | c]}
       %{output: out, stack: [a, _ | _]} ->
-	%{state | output: [out | [a <> " "]]}
+        %{state | output: [out | [a <> " "]]}
     end
     |> increment_pc
   end
@@ -109,11 +110,11 @@ defmodule MetaII.Machine do
 
   # end
   def step(state, :end), do: state
-  def step(state, op) do
+  def step(_state, op) do
     {:error, "Unrecognized op #{inspect op}"}
   end
 
-  defp read_current_op(state) do
+  defp read_current_op(_state) do
     {:error, "TODO: read current op from PC"}
   end
 
@@ -148,10 +149,10 @@ defmodule MetaII.Machine do
     else
       new_s =
         if s < "Z" do
-	  to_string [s |> to_charlist |> List.first |> Kernel.+(1)]
-	else
-	  "A"
-	end
+          to_string [s |> to_charlist |> List.first |> Kernel.+(1)]
+        else
+          "A"
+        end
       # TODO: prevent infinite loop by making longer `alpha_prefix`s
       # as needed
 
@@ -167,7 +168,8 @@ defmodule MetaII.Machine do
   end
 
   defp output_string(state) do
-    Map.get(state, :output, [""])
+    state
+    |> Map.get(:output, [""])
     |> List.flatten
     |> Enum.join
   end

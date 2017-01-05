@@ -52,42 +52,42 @@ defmodule MetaII.Machine.Test do
 
     test "call: enter subroutine at address when stack has two blanks" do
       actual = %{
-	pc: 32,
-	memory: %{16 => :dummy_subroutine},
-	stack: [nil, nil, :filler],
+        pc: 32,
+        memory: %{16 => :dummy_subroutine},
+        stack: [nil, nil, :filler],
       } |> Machine.step({:call, 16})
       assert %{pc: 16,
-	       stack: [nil, nil, %{push_count: 1, exit: 32 + 4}, :filler]} = actual
+               stack: [nil, nil, %{push_count: 1, exit: 32 + 4}, :filler]} = actual
     end
 
     test "call: enter subroutine at address when stack doesn't have two blanks" do
       actual = %{
-	pc: 32,
-	memory: %{16 => :dummy_subroutine},
-	stack: [:filler],
+        pc: 32,
+        memory: %{16 => :dummy_subroutine},
+        stack: [:filler],
       } |> Machine.step({:call, 16})
       assert %{pc: 16,
-	       stack: [nil, nil, %{push_count: 3, exit: 32 + 4}, :filler]} = actual
+               stack: [nil, nil, %{push_count: 3, exit: 32 + 4}, :filler]} = actual
     end
 
     test "return: leave a subroutine when push_count == 1" do
       actual = %{
-	pc: 16,
-	memory: %{16 => :dummy_subroutine},
-	stack: [:a, :b, %{push_count: 1, exit: 36}, :filler],
+        pc: 16,
+        memory: %{16 => :dummy_subroutine},
+        stack: [:a, :b, %{push_count: 1, exit: 36}, :filler],
       } |> Machine.step(:return)
       assert %{pc: 36,
-	       stack: [nil, nil, :filler]} = actual
+               stack: [nil, nil, :filler]} = actual
     end
 
     test "return: leave a subroutine when push_count == 3" do
       actual = %{
-	pc: 16,
-	memory: %{16 => :dummy_subroutine},
-	stack: [:a, :b, %{push_count: 3, exit: 36}, :filler],
+        pc: 16,
+        memory: %{16 => :dummy_subroutine},
+        stack: [:a, :b, %{push_count: 3, exit: 36}, :filler],
       } |> Machine.step(:return)
       assert %{pc: 36,
-	       stack: [:filler]} = actual
+               stack: [:filler]} = actual
     end
 
     test "set: turn branch switch on" do
@@ -116,51 +116,51 @@ defmodule MetaII.Machine.Test do
 
     test "copy_literal: output variable length string" do
       actual = %{
-	output: ["dummy "]
+        output: ["dummy "]
       } |> Machine.step({:copy_literal, "abc"})
       assert %{output: [["dummy "] | ["abc "]]} = actual
     end
 
     test "copy_input: output the remaining input" do
       actual = %{
-	input: "the end.",
-	output: ["dummy "],
+        input: "the end.",
+        output: ["dummy "],
       } |> Machine.step(:copy_input)
       assert %{output: [["dummy "] | ["the end."]]} = actual
     end
 
     test "generate1: generate and output a new label" do
       actual = %{
-	stack: [:a, nil, 1, 2, 3],
-	output: ["dummy "],
+        stack: [:a, nil, 1, 2, 3],
+        output: ["dummy "],
       } |> Machine.step(:generate1)
       assert %{stack: [:a, "A00", 1, 2, 3],
-	       output: [["dummy "] | ["A00 "]],
-	       gen: %{alpha_prefix: "A", n: 0}} = actual
+               output: [["dummy "] | ["A00 "]],
+               gen: %{alpha_prefix: "A", n: 0}} = actual
     end
 
     test "generate2: generate and output a new label" do
       actual = %{
-	stack: [nil, :b, 1, 2, 3],
-	output: ["dummy "],
+        stack: [nil, :b, 1, 2, 3],
+        output: ["dummy "],
       } |> Machine.step(:generate2)
       assert %{stack: ["A00", :b, 1, 2, 3],
-	       output: [["dummy "] | ["A00 "]],
-	       gen: %{alpha_prefix: "A", n: 0}} = actual
+               output: [["dummy "] | ["A00 "]],
+               gen: %{alpha_prefix: "A", n: 0}} = actual
     end
 
     test "label: set output counter to card column 1" do
       actual = %{
-	output_col: 5
+        output_col: 5
       } |> Machine.step(:label)
       assert %{output_col: 1} = actual
     end
 
     test "output: punch card and reset output counter to card column 8." do
       actual = %{
-	output: [[[["this "] | ["is "]] | ["a "]] | ["test "]],
-	output_col: 3,
-	card: "",
+        output: [[[["this "] | ["is "]] | ["a "]] | ["test "]],
+        output_col: 3,
+        card: "",
       } |> Machine.step(:output)
       assert %{card: "  this is a test ", output_col: 8} = actual
     end
