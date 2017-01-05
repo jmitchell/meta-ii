@@ -69,13 +69,12 @@ defmodule MetaII.Parser.Test do
       {{:ex3, :_string}, " rest"}
     end
 
-    @tag :skip			# TODO: implement ex1
     test "'(' EX1 ')'" do
       assert " ( LBL ) rest" |> Parser.ex3 ==
       {{:ex3, :_paren,
 	{:ex1,
 	 {:ex2,
-	  {:ex3, :_id, "LBL"}}}}, " rest"}
+	  {:ex3, :_id, "LBL"}, []}, []}}, " rest"}
     end
 
     test "'.EMPTY'" do
@@ -92,25 +91,25 @@ defmodule MetaII.Parser.Test do
 
   describe "Parser.ex2/1" do
     test "EX3 OUTPUT EX3" do
-      assert " AB .OUT('XYZ' *1) CD rest" |> Parser.ex2 ==
+      assert " AB .OUT('XYZ' *1) CD .rest" |> Parser.ex2 ==
       {{:ex2,
 	{:ex3, :_id, "AB"},
 	[{:output, :_out,
 	  [{:out1, :_string, "XYZ"},
 	   {:out1, :_gen1}]},
-	 {:ex3, :_id, "CD"}]}, " rest"}
+	 {:ex3, :_id, "CD"}]}, " .rest"}
     end
   end
 
   describe "Parse.ex1/1" do
     test "A / B" do
-      assert " AB / C D / EFG rest" |> Parser.ex1 ==
+      assert " AB / C D / EFG .rest" |> Parser.ex1 ==
       {{:ex1,
 	{:ex2, {:ex3, :_id, "AB"}, []},
 	[{:ex2,
 	  {:ex3, :_id, "C"},
 	  [{:ex3, :_id, "D"}]},
-	 {:ex2, {:ex3, :_id, "EFG"}, []}]}, " rest"}
+	 {:ex2, {:ex3, :_id, "EFG"}, []}]}, " .rest"}
     end
   end
 
@@ -151,7 +150,9 @@ defmodule MetaII.Parser.Test do
 	    [{:output, :_out, [{:out1, :_string, "LD "}, {:out1, :_asterisk}]}]},
 	   [{:ex2, {:ex3, :_number},
 	     [{:output, :_out, [{:out1, :_string, "LDL"}, {:out1, :_asterisk}]}]},
-	    {:ex2, {:ex3, :_paren, {:ex1, {:ex2, {:ex3, :_id, "EXP"}}}}}]}},
+	    {:ex2, {:ex3, :_string, "("},
+	     [{:ex3, :_id, "EXP"},
+	      {:ex3, :_string, ")"}]}]}},
 	 {:st, "TERM",
 	  {:ex1,
 	   {:ex2, {:ex3, :_id, "PRIMARY"},
@@ -160,7 +161,7 @@ defmodule MetaII.Parser.Test do
                {:ex1,
 		{:ex2, {:ex3, :_string, "*"},
 		 [{:ex3, :_id, "PRIMARY"},
-		  {:output, :_out, [{:out1, :_string, "MLT"}]}]}}}}]}}},
+		  {:output, :_out, [{:out1, :_string, "MLT"}]}]}, []}}}]}, []}},
 	 {:st, "EXP1",
 	  {:ex1,
 	   {:ex2, {:ex3, :_id, "TERM"},
@@ -171,7 +172,7 @@ defmodule MetaII.Parser.Test do
 		 [{:ex3, :_id, "TERM"}, {:output, :_out, [{:out1, :_string, "ADD"}]}]},
 		[{:ex2, {:ex3, :_string, "-"},
 		  [{:ex3, :_id, "TERM"},
-		   {:output, :_out, [{:out1, :_string, "SUB"}]}]}]}}}]}}},
+		   {:output, :_out, [{:out1, :_string, "SUB"}]}]}]}}}]}, []}},
 	 {:st, "EXP",
 	  {:ex1,
 	   {:ex2, {:ex3, :_id, "EXP1"},
@@ -227,7 +228,7 @@ defmodule MetaII.Parser.Test do
 	   {:ex2, {:ex3, :_id, "IDSEQ1"},
 	    [{:ex3, :_dollar,
               {:ex3, :_paren,
-               {:ex1, {:ex2, {:ex3, :_string, "."}, [{:ex3, :_id, "IDSEQ1)"}]},
+               {:ex1, {:ex2, {:ex3, :_string, "."}, [{:ex3, :_id, "IDSEQ1"}]},
 		[]}}}]}, []}},
 	 {:st, "DEC",
 	  {:ex1,
@@ -236,17 +237,19 @@ defmodule MetaII.Parser.Test do
 	     {:ex3, :_id, "IDSEQ"}, {:output, :_label, {:out1, :_gen1}}]}, []}},
 	 {:st, "BLOCK",
 	  {:ex1,
-	   {:ex2, {:ex3, :_string, ".BEGIN"},
+	   {:ex2,
+	    {:ex3, :_string, ".BEGIN"},
 	    [{:ex3, :_paren,
               {:ex1, {:ex2, {:ex3, :_id, "DEC"}, [{:ex3, :_string, ".,"}]},
-               [{:ex2, {:ex3, :_empty},
-		 [{:ex3, :_id, ")"}, {:ex3, :_id, "ST"},
-		  {:ex3, :_dollar,
-		   {:ex3, :_paren,
-		    {:ex1,
-		     {:ex2, {:ex3, :_string, ".,"},
-                      [{:ex3, :_id, "ST)"}, {:ex3, :_string, ".END"}]}, []}}}]}]}}]},
-	   []}},
+               [{:ex2, {:ex3, :_empty}, []}]}},
+	     {:ex3, :_id, "ST"},
+	     {:ex3, :_dollar,
+	      {:ex3, :_paren,
+	       {:ex1,
+		{:ex2,
+		 {:ex3, :_string, ".,"},
+                 [{:ex3, :_id, "ST"}]}, []}}},
+	     {:ex3, :_string, ".END"}]}, []}},
 	 {:st, "ST",
 	  {:ex1, {:ex2, {:ex3, :_id, "IOST"}, []},
 	   [{:ex2, {:ex3, :_id, "ASSIGNST"}, []}, {:ex2, {:ex3, :_id, "UNTILST"}, []},

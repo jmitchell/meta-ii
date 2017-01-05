@@ -2,7 +2,7 @@ defmodule MetaII.Compiler.Test do
   use ExUnit.Case, async: true
   doctest MetaII.Compiler
 
-  alias MetaII.Compiler
+  # alias MetaII.Compiler
 
   # describe "Compiler.compile/1" do
   #   @tag :skip			# TODO
