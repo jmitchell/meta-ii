@@ -61,7 +61,7 @@ defmodule ValgolI.Compiler do
     PROGRAM = BLOCK .OUT('HLT')
          .OUT('SP  1') .OUT('END') .,
 
-    .END
+    .END 
     """
   end
 end
