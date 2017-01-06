@@ -124,19 +124,18 @@ defmodule MetaII.Machine do
 
   defp match_input(state, re_str) do
     input = trimmed_input(state)
-    re = ~r/\A#{re_str}/
-    new_input = Regex.replace(re, input, "", global: false)
-
-    # IO.puts """
-    # input: #{input}
-    # new_input: #{new_input}
-    # regex: #{inspect re}
-    # match?: #{Regex.match? re, input}
-    # """
-
-    state
-    |> update(:input, new_input)
-    |> update(:switch, new_input != input)
+    case Regex.run(~r/\A(#{re_str})(.*)/s, input) do
+      [_, m, r] ->
+	state
+	|> update(:match_buffer, m)
+	|> update(:input, r)
+	|> update(:switch, true)
+      _ ->
+	state
+	|> update(:match_buffer, "")
+	|> update(:input, input)
+	|> update(:switch, false)
+    end
   end
 
   defp increment_pc(state) do
