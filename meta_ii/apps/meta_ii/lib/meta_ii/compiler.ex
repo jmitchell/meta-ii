@@ -167,9 +167,32 @@ defmodule MetaII.Compiler do
     ## PROGRAM ##
 
             # "PROGRAM ="
+    PROGRAM                     # ST > .ID .LABEL *
+
             # "'.SYNTAX' .ID .OUT('ADR' *) $ ST"
+            TST '.SYNTAX'       # ST > EX1 > EX2 > EX3 > .STRING
+            BF _03              #          > EX2
+            ID                  #          > EX2$ > EX3 > '.ID'
+            BE                  #          > EX2$
+            CL  'ADR'           #          > EX2$ > OUTPUT > OUT1 > .STRING
+            CI                  #                 > OUTPUT > OUT1 > '*'
+            OUT                 #                 > OUTPUT
+    _04                         #          > EX2$ > EX3 > '$'
+            CLL ST              #                       > '$' > EX3 > .ID
+            BT  _04             #                       > '$' > .OUT('BT ' *1)
+            SET                 #                       > '$' > .OUT('SET')
+            BE                  #          > EX2$
+
             # "'.END' .OUT('END')"
+            TST '.END'          #          > EX2$ > EX3 > .STRING
+            BE                  #          > EX2$
+            CL 'END'            #          > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                 > OUTPUT
+    _03                         #          > EX2
+    _05                         #    > EX1
+
             # ".,"
+            R                   # ST
 
 
     ## .END ##
