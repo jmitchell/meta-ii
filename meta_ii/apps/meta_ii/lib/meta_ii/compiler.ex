@@ -57,29 +57,7 @@ defmodule MetaII.Compiler do
     """
     ## .SYNTAX PROGRAM ##
 
-            # ".SYNTAX"
-            TST '.SYNTAX'       # PROGRAM > EX1 > EX2 > EX3 > .STRING
-            BF  A01             #               > EX2
-
-            # "PROGRAM"
-            CLL PROGRAM         #               > EX2$ > EX3 > .ID
-            BE                  #               > EX2$
-            CL  'ADR'           #               > EX2$ > OUTPUT > OUT1 > .STRING
-            CI                  #                               > OUT1 > '*'
-            OUT                 #               > EX2$ > OUTPUT
-    A02                         #               > EX2$ > EX3 > '$' > .LABEL *1
-            CLL ST              #                              '$' > EX3 > .ID
-            BT  A02             #                              '$' > .OUT('BT ' *1)
-            SET                 #                              '$' > .OUT('SET')
-            BE                  #               > EX2$
-            TST '.END'          #               > EX2$ > EX3 > .STRING
-            BE                  #               > EX2$
-            CL  'END'           #               > EX2$ > OUTPUT > OUT1 > .STRING
-            OUT                 #                      > OUTPUT > .OUT('OUT')
-    A01                         #               > EX2
-    # unused label; never entered EX1$
-    A03                         #         > EX1 > .LABEL *1
-
+            ADR PROGRAM         # PROGRAM > '.SYNTAX' .ID .OUT('ADR' *)
 
     ## OUT1 ##
 
@@ -138,69 +116,67 @@ defmodule MetaII.Compiler do
       #       ID generator state upon reaching this point.
 
             # "ST ="
-    ST                          # ST > .ID .LABEL *
+    ST                          # PROGRAM > ST > .ID .LABEL *
 
             # ".ID .LABEL * '=' EX1"
-            ID                  # ST > EX1 > EX2 > EX3 > '.ID'
-            BF _01              #          > EX2
-            LB                  #          > EX2$ > OUTPUT > '.LABEL' > OUT('LB')
-            CI                  #                          > '.LABEL' > OUT1 > '*'
-            OUT                 #                 > OUTPUT
-            TST '='             #          > EX2$ > EX3 > .STRING
-            BE                  #          > EX2$
-            CLL EX1             #          > EX2$ > EX3 > .ID
-            BE                  #          > EX2$
+            ID                  #         > ST > EX1 > EX2 > EX3 > '.ID'
+            BF _01              #                    > EX2
+            LB                  #                    > EX2$ > OUTPUT > '.LABEL' > OUT('LB')
+            CI                  #                                    > '.LABEL' > OUT1 > '*'
+            OUT                 #                           > OUTPUT
+            TST '='             #                    > EX2$ > EX3 > .STRING
+            BE                  #                    > EX2$
+            CLL EX1             #                    > EX2$ > EX3 > .ID
+            BE                  #                    > EX2$
 
             # "'.,' .OUT('R')"
-            TST '.,'            #          > EX2$ > EX3 > .STRING
-            BE                  #          > EX2$
-            CL  'R'             #          > EX2$ > OUTPUT > OUT1 > .STRING
-            OUT                 #                 > OUTPUT
-    _01                         #          > EX2
+            TST '.,'            #                    > EX2$ > EX3 > .STRING
+            BE                  #                    > EX2$
+            CL  'R'             #                    > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                           > OUTPUT
+    _01                         #                    > EX2
 
     # another unused label; EX1$ never entered
-    _02                         #    > EX1
+    _02                         #              > EX1
             # ".,"
-            R                   # ST > '.,'
+            R                   #         > ST > '.,'
 
 
     ## PROGRAM ##
 
             # "PROGRAM ="
-    PROGRAM                     # ST > .ID .LABEL *
+    PROGRAM                     # PROGRAM > ST > .ID .LABEL *
 
             # "'.SYNTAX' .ID .OUT('ADR' *) $ ST"
-            TST '.SYNTAX'       # ST > EX1 > EX2 > EX3 > .STRING
-            BF _03              #          > EX2
-            ID                  #          > EX2$ > EX3 > '.ID'
-            BE                  #          > EX2$
-            CL  'ADR'           #          > EX2$ > OUTPUT > OUT1 > .STRING
-            CI                  #                 > OUTPUT > OUT1 > '*'
-            OUT                 #                 > OUTPUT
-    _04                         #          > EX2$ > EX3 > '$'
-            CLL ST              #                       > '$' > EX3 > .ID
-            BT  _04             #                       > '$' > .OUT('BT ' *1)
-            SET                 #                       > '$' > .OUT('SET')
-            BE                  #          > EX2$
+            TST '.SYNTAX'       #         > ST > EX1 > EX2 > EX3 > .STRING
+            BF _03              #                    > EX2
+            ID                  #                    > EX2$ > EX3 > '.ID'
+            BE                  #                    > EX2$
+            CL  'ADR'           #                    > EX2$ > OUTPUT > OUT1 > .STRING
+            CI                  #                           > OUTPUT > OUT1 > '*'
+            OUT                 #                           > OUTPUT
+    _04                         #                    > EX2$ > EX3 > '$'
+            CLL ST              #                                 > '$' > EX3 > .ID
+            BT  _04             #                                 > '$' > .OUT('BT ' *1)
+            SET                 #                                 > '$' > .OUT('SET')
+            BE                  #                    > EX2$
 
             # "'.END' .OUT('END')"
-            TST '.END'          #          > EX2$ > EX3 > .STRING
-            BE                  #          > EX2$
-            CL 'END'            #          > EX2$ > OUTPUT > OUT1 > .STRING
-            OUT                 #                 > OUTPUT
-    _03                         #          > EX2
-    _05                         #    > EX1
+            TST '.END'          #                    > EX2$ > EX3 > .STRING
+            BE                  #                    > EX2$
+            CL 'END'            #                    > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                           > OUTPUT
+    _03                         #                    > EX2
+    _05                         #              > EX1
 
             # ".,"
-            R                   # ST
+            R                   #         > ST
 
 
     ## .END ##
 
             # ".END"
-
-
-
+            OUT 'END'           # PROGRAM > '.END' .OUT('END')
     """
     |> strip_comments
   end
