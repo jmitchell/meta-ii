@@ -134,10 +134,34 @@ defmodule MetaII.Compiler do
 
     ## ST ##
 
+      # TODO: replace _0, _1 with actual labels according to compiler
+      #       ID generator state upon reaching this point.
+
             # "ST ="
+    ST                          # ST > .ID .LABEL *
+
             # ".ID .LABEL * '=' EX1"
+            ID                  # ST > EX1 > EX2 > EX3 > '.ID'
+            BF _01              #          > EX2
+            LB                  #          > EX2$ > OUTPUT > '.LABEL' > OUT('LB')
+            CI                  #                          > '.LABEL' > OUT1 > '*'
+            OUT                 #                 > OUTPUT
+            TST '='             #          > EX2$ > EX3 > .STRING
+            BE                  #          > EX2$
+            CLL EX1             #          > EX2$ > EX3 > .ID
+            BE                  #          > EX2$
+
             # "'.,' .OUT('R')"
+            TST '.,'            #          > EX2$ > EX3 > .STRING
+            BE                  #          > EX2$
+            CL  'R'             #          > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                 > OUTPUT
+    _01                         #          > EX2
+
+    # another unused label; EX1$ never entered
+    _02                         #    > EX1
             # ".,"
+            R                   # ST > '.,'
 
 
     ## PROGRAM ##
