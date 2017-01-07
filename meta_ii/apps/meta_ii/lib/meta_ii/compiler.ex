@@ -149,78 +149,78 @@ defmodule MetaII.Compiler do
     EX3                         # PROGRAM > ST > .ID .LABEL *
 
             # ".ID .OUT('CLL' *) /"
-	    ID			#         > ST > EX1 > EX2 > EX3 > '.ID'
-	    BF  A12		#                    > EX2 > .OUT('BF ' *1)
-	    CL  'CLL'		#                    > EX2$ > OUTPUT > OUT1 > .STRING
-	    CI			#                           > OUTPUT > OUT1 > '*'
-	    OUT			#                           > OUTPUT
-    A12				#                    > EX2
-            BT  A13		#              > EX1$ > .OUT('BT ' *1)
+            ID                  #         > ST > EX1 > EX2 > EX3 > '.ID'
+            BF  A12             #                    > EX2 > .OUT('BF ' *1)
+            CL  'CLL'           #                    > EX2$ > OUTPUT > OUT1 > .STRING
+            CI                  #                           > OUTPUT > OUT1 > '*'
+            OUT                 #                           > OUTPUT
+    A12                         #                    > EX2
+            BT  A13             #              > EX1$ > .OUT('BT ' *1)
 
             # ".STRING .OUT('TST' *) /"
-	    SR			#              > EX1$ > EX2 > EX3 > '.STRING'
-	    BF  A14		#                     > EX2 > .OUT('BF ' *1)
-	    CL  'TST'		#                     > EX2$ > OUTPUT > OUT1 > .STRING
-	    CI			#                            > OUTPUT > OUT1 > '*'
-	    OUT			#                            > OUTPUT
-    A14				#                     > EX2
-            BT  A13		#              > EX1$ > .OUT('BT ' *1)
+            SR                  #              > EX1$ > EX2 > EX3 > '.STRING'
+            BF  A14             #                     > EX2 > .OUT('BF ' *1)
+            CL  'TST'           #                     > EX2$ > OUTPUT > OUT1 > .STRING
+            CI                  #                            > OUTPUT > OUT1 > '*'
+            OUT                 #                            > OUTPUT
+    A14                         #                     > EX2
+            BT  A13             #              > EX1$ > .OUT('BT ' *1)
 
             # "'.ID' .OUT('ID') /"
-	    TST '.ID'		#              > EX1$ > EX2 > EX3 > .STRING
-	    BF  A15		#                     > EX2 > .OUT('BF ' *1)
-	    CL  'ID'        	#                     > EX2$ > OUTPUT > OUT1 > .STRING
-	    OUT			#                            > OUTPUT
-    A15				#                     > EX2
-            BT  A13		#              > EX1$ > .OUT('BT ' *1)
+            TST '.ID'           #              > EX1$ > EX2 > EX3 > .STRING
+            BF  A15             #                     > EX2 > .OUT('BF ' *1)
+            CL  'ID'            #                     > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                            > OUTPUT
+    A15                         #                     > EX2
+            BT  A13             #              > EX1$ > .OUT('BT ' *1)
 
             # "'.NUMBER' .OUT('NUM') /"
-	    TST '.NUMBER'	#              > EX1$ > EX2 > EX3 > .STRING
-	    BF  A16		#                     > EX2 > .OUT('BF ' *1)
-	    CL  'NUM'       	#                     > EX2$ > OUTPUT > OUT1 > .STRING
-	    OUT			#                            > OUTPUT
-    A16				#                     > EX2
-            BT  A13		#              > EX1$ > .OUT('BT ' *1)
+            TST '.NUMBER'       #              > EX1$ > EX2 > EX3 > .STRING
+            BF  A16             #                     > EX2 > .OUT('BF ' *1)
+            CL  'NUM'           #                     > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                            > OUTPUT
+    A16                         #                     > EX2
+            BT  A13             #              > EX1$ > .OUT('BT ' *1)
 
             # "'.STRING' .OUT('SR') /"
-	    TST '.STRING'	#              > EX1$ > EX2 > EX3 > .STRING
-	    BF  A17		#                     > EX2 > .OUT('BF ' *1)
-	    CL  'SR'        	#                     > EX2$ > OUTPUT > OUT1 > .STRING
-	    OUT			#                            > OUTPUT
-    A17				#                     > EX2
-            BT  A13		#              > EX1$ > .OUT('BT ' *1)
+            TST '.STRING'       #              > EX1$ > EX2 > EX3 > .STRING
+            BF  A17             #                     > EX2 > .OUT('BF ' *1)
+            CL  'SR'            #                     > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                            > OUTPUT
+    A17                         #                     > EX2
+            BT  A13             #              > EX1$ > .OUT('BT ' *1)
 
             # "'(' EX1 ')' /"
-	    TST '('		#              > EX1$ > EX2 > EX3 > .STRING
-	    BF  A18		#                     > EX2 > .OUT('BF ' *1)
-	    CLL EX1		#                     > EX2$ > EX3 > .ID
-	    BE			#                     > EX2$
-	    TST ')'		#                     > EX2$ > EX3 > .STRING
-	    BE			#                     > EX2$
-    A18				#                     > EX2
-	    BT  A13		#              > EX1$ > .OUT('BT ' *1)
+            TST '('             #              > EX1$ > EX2 > EX3 > .STRING
+            BF  A18             #                     > EX2 > .OUT('BF ' *1)
+            CLL EX1             #                     > EX2$ > EX3 > .ID
+            BE                  #                     > EX2$
+            TST ')'             #                     > EX2$ > EX3 > .STRING
+            BE                  #                     > EX2$
+    A18                         #                     > EX2
+            BT  A13             #              > EX1$ > .OUT('BT ' *1)
 
             # "'.EMPTY' .OUT('SET') /"
-	    TST '.EMPTY'	#              > EX1$ > EX2 > EX3 > .STRING
-	    BF  A19		#                     > EX2 > .OUT('BF ' *1)
-	    CL  'SET'		#                     > EX2$ > OUTPUT > OUT1 > .STRING
-	    OUT			#                            > OUTPUT
-    A19				#                     > EX2
-            BT  A13		#              > EX1$ > .OUT('BT ' *1)
+            TST '.EMPTY'        #              > EX1$ > EX2 > EX3 > .STRING
+            BF  A19             #                     > EX2 > .OUT('BF ' *1)
+            CL  'SET'           #                     > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                            > OUTPUT
+    A19                         #                     > EX2
+            BT  A13             #              > EX1$ > .OUT('BT ' *1)
 
             # "'$' .LABEL *1 EX3 .OUT('BT ' *1) .OUT('SET')"
-	    TST '$' 		#              > EX1$ > EX2 > EX3 > .STRING
-	    BF  A20		#                     > EX2 > .OUT('BF ' *1)
-    A21				#                     > EX2$ > .LABEL *1
-            CLL EX3		#                     > EX2$ > EX3 > .ID
-	    BE			#                     > EX2$
-            BT  A21		#                     > EX2$ > .OUT('BT ' *1)
-	    SET			#                     > EX2$ > .OUT('SET')
-    A20				#                     > EX2
-    A13				#              > EX1
+            TST '$'             #              > EX1$ > EX2 > EX3 > .STRING
+            BF  A20             #                     > EX2 > .OUT('BF ' *1)
+    A21                         #                     > EX2$ > .LABEL *1
+            CLL EX3             #                     > EX2$ > EX3 > .ID
+            BE                  #                     > EX2$
+            BT  A21             #                     > EX2$ > .OUT('BT ' *1)
+            SET                 #                     > EX2$ > .OUT('SET')
+    A20                         #                     > EX2
+    A13                         #              > EX1
 
             # ".,"
-	    R			# PROGRAM > ST
+            R                   # PROGRAM > ST
 
 
     ## EX2 ##
@@ -229,19 +229,76 @@ defmodule MetaII.Compiler do
     EX2                         # PROGRAM > ST > .ID .LABEL *
 
             # "(EX3 .OUT('BF ' *1) /"
+            CLL EX3             #         > ST > EX1 > EX2 > EX3 > '(' > EX1 > EX2 > EX3 > .ID
+            BF  A22             #                                            > EX2 > .OUT('BF ' *1)
+            BF  A23             #                                            > EX2$ > .OUT('BF ' *1)
+    A22                         #                                            > EX2
+            BT  A24             #                                      > EX1 > '/' > .OUT('BT ' *1)
+
             # "OUTPUT)"
+            CLL OUTPUT          #                                              '/' > EX2 > EX3 > .ID
+            BF  A25             #                                                  > EX2 > .OUT('BF ' *1)
+    A25                         #                                                  > EX2
+    A24                         #                                      > EX1
+            BF  A26             #                    > EX2
+
             # "$(EX3 .OUT('BE') /"
+    A27                         #                    > EX2$ > EX3 > '$' > LABEL *1
+            CLL EX3             #                                 > '$' > EX3 > '(' > EX1 > EX2 > EX3 > .ID
+            BF  A28             #                                                         > EX2 > .OUT('BF ' *1)
+            CL  'BE'            #                                                         > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                                                         > EX2$ > OUTPUT
+    A28                         #                                                         > EX2
+            BT  A29             #                                                   > EX1$ > '/' > .OUT('BT ' *1)
+
             # "OUTPUT)"
+            CLL OUTPUT          #                                                   > EX1$ > '/' > EX2 > EX3 > .ID
+            BF  A30             #                                                   > EX1$ > '/' > EX2
+    A30                         #                                                   > EX1$ > '/' > EX2
+    A29                         #                                                   > EX1
+            BT  A27             #                                 > '$' > .OUT('BT ' *1)
+            SET                 #                           > EX3 > '$' > .OUT('SET')
+            BE                  #                    > EX2$
+
             # ".LABEL *1"
+            LB                  #                    > EX2$ > OUTPUT > '.LABEL' > .OUT('LB')
+            GN1                 #                                    > '.LABEL' > OUT1 > '*1'
+            OUT                 #                           > OUTPUT
+            BE                  #                    > EX2$
+    A26                         #                    > EX2
+    A31                         #              > EX1
+
             # ".,"
+            R                   # PROGRAM > ST
 
 
     ## EX1 ##
 
             # "EX1 ="
     EX1                         # PROGRAM > ST > .ID .LABEL *
+
             # "EX2 $('/' .OUT('BT ' *1) EX2) .LABEL *1"
+            CLL EX2             #         > ST > EX1 > EX2 > EX3 > .ID
+            BF  A32             #                    > EX2
+    A33                         #                    > EX2$ > EX3 > '$' > .LABEL *1
+            TST '/'             #                                 > '$' > EX3 > EX1 > EX2 > EX3 > .STRING
+            BF  A34             #                                                   > EX2
+            BT  A35             #                                                   > EX2$ > .OUT('BT ' *1)
+            CLL EX2             #                                                   > EX2$ > EX3 > .ID
+            BE                  #                                                   > EX2$
+    A34                         #                                                   > EX2
+    A35                         #                                             > EX1
+            BT  A33             #                                 > '$' > OUT('BT ' *1)
+            SET                 #                                 > '$' > OUT('SET')
+            BE                  #                    > EX2$ > .OUT('BE')
+            LB                  #                    > EX2$ > OUTPUT > '.LABEL' > .OUT('LB')
+            GN1                 #                                      '.LABEL' > OUT1 > '*1'
+            OUT                 #                           > OUTPUT
+    A32                         #                    > EX2
+    A36                         #              > EX1
+
             # ".,"
+            R                   # PROGRAM > ST
 
 
     ## ST ##
@@ -254,7 +311,7 @@ defmodule MetaII.Compiler do
 
             # ".ID .LABEL * '=' EX1"
             ID                  #         > ST > EX1 > EX2 > EX3 > '.ID'
-            BF _01              #                    > EX2
+            BF  A37             #                    > EX2
             LB                  #                    > EX2$ > OUTPUT > '.LABEL' > OUT('LB')
             CI                  #                                    > '.LABEL' > OUT1 > '*'
             OUT                 #                           > OUTPUT
@@ -268,10 +325,10 @@ defmodule MetaII.Compiler do
             BE                  #                    > EX2$
             CL  'R'             #                    > EX2$ > OUTPUT > OUT1 > .STRING
             OUT                 #                           > OUTPUT
-    _01                         #                    > EX2
+    A37                         #                    > EX2
 
     # another unused label; EX1$ never entered
-    _02                         #              > EX1
+    A38                         #              > EX1
             # ".,"
             R                   # PROGRAM > ST > '.,'
 
@@ -283,15 +340,15 @@ defmodule MetaII.Compiler do
 
             # "'.SYNTAX' .ID .OUT('ADR' *) $ ST"
             TST '.SYNTAX'       #         > ST > EX1 > EX2 > EX3 > .STRING
-            BF  _03             #                    > EX2
+            BF  A39             #                    > EX2
             ID                  #                    > EX2$ > EX3 > '.ID'
             BE                  #                    > EX2$
             CL  'ADR'           #                    > EX2$ > OUTPUT > OUT1 > .STRING
             CI                  #                           > OUTPUT > OUT1 > '*'
             OUT                 #                           > OUTPUT
-    _04                         #                    > EX2$ > EX3 > '$'
+    A40                         #                    > EX2$ > EX3 > '$'
             CLL ST              #                                 > '$' > EX3 > .ID
-            BT  _04             #                                 > '$' > .OUT('BT ' *1)
+            BT  A40             #                                 > '$' > .OUT('BT ' *1)
             SET                 #                                 > '$' > .OUT('SET')
             BE                  #                    > EX2$
 
@@ -300,8 +357,8 @@ defmodule MetaII.Compiler do
             BE                  #                    > EX2$
             CL 'END'            #                    > EX2$ > OUTPUT > OUT1 > .STRING
             OUT                 #                           > OUTPUT
-    _03                         #                    > EX2
-    _05                         #              > EX1
+    A39                         #                    > EX2
+    A41                         #              > EX1
 
             # ".,"
             R                   # PROGRAM > ST
@@ -310,7 +367,7 @@ defmodule MetaII.Compiler do
     ## .END ##
 
             # ".END"
-            OUT 'END'           # PROGRAM > '.END' .OUT('END')
+            END                 # PROGRAM > '.END' .OUT('END')
     """
     |> strip_comments
   end
