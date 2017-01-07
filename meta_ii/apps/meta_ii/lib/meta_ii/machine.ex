@@ -1,18 +1,139 @@
 defmodule MetaII.Machine do
   @bytes_per_instruction 4
+  @bytes_per_word 4
+  @print_area_size 100
 
-  def parse(_src) do
-    {:error, "TODO: parse src to produce a state Map"}
+  def interpret(src, input) when is_binary(src) and is_binary(input) do
+    src
+    |> parse
+    |> Map.put(:input, input)
+    |> Map.put(:output, [""])
+    |> Map.put(:pc, 0)
+    |> interpret
+  end
+  def interpret(state) do
+    case state |> step do
+      {:ok, state} ->
+        state |> interpret
+      {:ok, :end, state} ->
+        state
+      error ->
+        error
+    end
   end
 
-  def interpret(state) do
-    state |> step |> interpret
+  defp parse(src) when is_binary(src) do
+    src
+    |> String.split("\n")
+    |> parse(%{address: 0, instructions: %{}, labels: %{}})
+    |> Map.delete(:address)
+    |> dereference_labels
+  end
+  def parse([h | t], context) do
+    new_context = if String.trim(h) == "" do
+      context
+    else
+      case h |> String.trim_trailing |> parse_line do
+        {:ok, {:op, code}} ->
+          %{context |
+            instructions: Map.put_new(context.instructions, context.address, code),
+            address: next_instruction_addr(context.address, code)}
+        {:ok, {:label, label}} ->
+          # TODO: ensure label isn't already used
+          %{context |
+            labels: Map.put_new(context.labels, label, context.address)}
+        error -> error
+      end
+    end
+
+    with {:ok, result} <- parse(t, new_context),
+      do: result
+  end
+  def parse([], context), do: context
+
+  defp parse_line(" " <> op) do
+    case parse_op(op) do
+      {:error, reason} -> {:error, reason}
+      :error -> {:error, "Encountered some kind of error"}
+      op_code -> {:ok, {:op, op_code}}
+    end
+  end
+  defp parse_line(label) do
+    {:label, label}
+  end
+
+  defp parse_op(" " <> op), do: parse_op(op)
+  defp parse_op("TST" <> str), do: parse_string(:test, str)
+  defp parse_op("BE"), do: :branch_error
+  defp parse_op("CL " <> str), do: parse_string(:copy_literal, str)
+  defp parse_op("CI"), do: :copy_input
+  defp parse_op("OUT"), do: :output
+  defp parse_op("END"), do: :end
+  defp parse_op(x), do: {:error, "Unrecognized assembly op code: #{x}"}
+
+  defp parse_string(op, " " <> s), do: parse_string(op, s)
+  defp parse_string(op, "'" <> str) do
+    case Regex.run(~r/^([^']*)'/, str) do
+      nil -> {:error, "Invalid string; missing end quote"}
+      [_, s] -> {op, s}
+    end
+  end
+
+
+  # defp next_instruction_addr(addr, :equal), do: addr + 1
+  # defp next_instruction_addr(addr, :multiply), do: addr + 1
+  # defp next_instruction_addr(addr, :add), do: addr + 1
+  # defp next_instruction_addr(addr, :subtract), do: addr + 1
+  # defp next_instruction_addr(addr, :print), do: addr + 1
+  # defp next_instruction_addr(addr, :halt), do: addr + 1
+  # defp next_instruction_addr(addr, :end), do: addr + 1
+  # defp next_instruction_addr(addr, {:block, n}), do: addr + (n * 8)
+  # defp next_instruction_addr(addr, {:load_literal, _}), do: addr + 9
+  # defp next_instruction_addr(addr, {:edit, _}), do: addr + 2
+  # defp next_instruction_addr(addr, {:space, n}), do: addr + n
+  defp next_instruction_addr(addr, _code), do: addr + @bytes_per_word
+
+  defp dereference_labels(assembly) do
+    deref = fn
+      {addr, {op, {:label_ref, ref}}} ->
+        case Map.get(assembly.labels, ref) do
+          nil -> {:error, "Unrecognized label reference: '#{ref}'"}
+          label_addr -> {:ok, {addr, {op, label_addr}}}
+        end
+      {addr, instr} -> {:ok, {addr, instr}}
+    end
+
+    instructions =
+      Enum.reduce(assembly.instructions, {:ok, %{}}, fn {addr, _} = instr, acc ->
+        with {:ok, acc} <- acc,
+             {:ok, instr} <- deref.(instr) do
+          {:ok, Map.put(acc, addr, instr)}
+        end
+      end)
+
+    with {:ok, instructions} <- instructions do
+      %{assembly | instructions: instructions}
+    end
+  end
+
+  defp read_current_op(%{instructions: instrs, pc: pc}) do
+    case instrs |> Map.get(pc) do
+      {_addr, instr} -> {:ok, instr}
+      _ -> {:error, "No instruction found at PC address '#{inspect pc}'"}
+    end
   end
 
   def step(state) do
-    case read_current_op(state) do
-      {:ok, op} -> step(state, op)
-      error -> error
+    case state |> read_current_op do
+      {:error, reason} -> {:error, reason}
+      {:ok, :end} ->
+        {:ok, :end, state}
+      {:ok, op} ->
+        case step(state, op) do
+          {:error, reason} -> {:error, reason}
+          :error -> :error
+          new_state -> {:ok, new_state}
+        end
     end
   end
   def step(state, {:test, str}), do: state |> match_input(str) |> increment_pc
@@ -63,8 +184,8 @@ defmodule MetaII.Machine do
     %{state | output: [Map.get(state, :output, []) | [str <> " "]]}
     |> increment_pc
   end
-  def step(%{input: i} = state, :copy_input) do
-    %{state | output: [Map.get(state, :output, []) | [i]]}
+  def step(%{delete_buffer: b} = state, :copy_input) do
+    %{state | output: [Map.get(state, :output, []) | [b]]}
     |> increment_pc
   end
   def step(state, :generate1) do
@@ -109,13 +230,8 @@ defmodule MetaII.Machine do
   # def step(state, {:address, ident}) do
 
   # end
-  def step(state, :end), do: state
   def step(_state, op) do
     {:error, "Unrecognized op #{inspect op}"}
-  end
-
-  defp read_current_op(_state) do
-    {:error, "TODO: read current op from PC"}
   end
 
   defp update(state, key, val), do: Map.put(state, key, val)
@@ -123,20 +239,19 @@ defmodule MetaII.Machine do
   defp trimmed_input(state), do: String.trim_leading(state[:input])
 
   defp match_input(state, re_str) do
-    input = trimmed_input(state)
-    re = ~r/\A#{re_str}/
-    new_input = Regex.replace(re, input, "", global: false)
+    input = state |> trimmed_input
 
-    # IO.puts """
-    # input: #{input}
-    # new_input: #{new_input}
-    # regex: #{inspect re}
-    # match?: #{Regex.match? re, input}
-    # """
-
-    state
-    |> update(:input, new_input)
-    |> update(:switch, new_input != input)
+    case Regex.run(~r/\A(#{re_str})(.*\Z)/s, input) do
+      [_, input, rest] ->
+        state
+        |> update(:delete_buffer, input)
+        |> update(:input, rest)
+        |> update(:switch, true)
+      _ ->
+        state
+        |> update(:input, input)
+        |> update(:switch, false)
+    end
   end
 
   defp increment_pc(state) do

@@ -12,7 +12,7 @@ defmodule MetaII.Machine.Test do
 
     test "test: input matches argument string" do
       actual = Machine.step(%{input: "  hello world", pc: 12}, {:test, "hello wo"})
-      assert %{input: "rld", switch: true, pc: 16} = actual
+      assert %{input: "rld", delete_buffer: "hello wo", switch: true, pc: 16} = actual
     end
 
     test "test: input doesn't match argument string" do
@@ -121,12 +121,12 @@ defmodule MetaII.Machine.Test do
       assert %{output: [["dummy "] | ["abc "]]} = actual
     end
 
-    test "copy_input: output the remaining input" do
+    test "copy_input: output the last string deleted from the input" do
       actual = %{
-        input: "the end.",
-        output: ["dummy "],
+        delete_buffer: "the end",
+        output: ["once upon a time "],
       } |> Machine.step(:copy_input)
-      assert %{output: [["dummy "] | ["the end."]]} = actual
+      assert %{output: [["once upon a time "] | ["the end"]]} = actual
     end
 
     test "generate1: generate and output a new label" do
@@ -172,10 +172,25 @@ defmodule MetaII.Machine.Test do
       # source code instead of bytes of memory (e.g. remove
       # @bytes_per_instruction).
     end
+  end
 
-    test "end: denotes the end of the program" do
-      actual = %{dummy_state: [1,2,3]} |> Machine.step(:end)
-      assert %{dummy_state: [1,2,3]} = actual
+  describe "Machine.interpret/2" do
+    test "TST, CL, CI, and OUT" do
+      program =
+        """
+                TST '.SYNTAX'
+                CL  'read'
+                CI
+                CL  ' from input'
+                OUT
+                END
+        """
+      input =
+        """
+        .SYNTAX PROGRAM
+        """
+
+      assert %{card: "read .SYNTAX from input "} = Machine.interpret(program, input)
     end
   end
 end
