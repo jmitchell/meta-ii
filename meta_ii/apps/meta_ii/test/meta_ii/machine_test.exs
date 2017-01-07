@@ -164,20 +164,17 @@ defmodule MetaII.Machine.Test do
       } |> Machine.step(:output)
       assert %{card: "  this is a test ", output_col: 8} = actual
     end
-
-    @tag :skip
-    test "address: produce the address which is assigned to the given identifier as a constant" do
-      flunk "need to make a second pass through the addressable memory"
-      # TODO: refactor META II interpreter so it operates on lines of
-      # source code instead of bytes of memory (e.g. remove
-      # @bytes_per_instruction).
-    end
   end
 
   describe "Machine.interpret/2" do
-    test "TST, CL, CI, and OUT" do
+    test "ADR, TST, CL, CI, and OUT" do
       program =
         """
+                ADR START
+        FALSESTART
+                CL  'wrong droid'
+                END
+        START
                 TST '.SYNTAX'
                 CL  'read'
                 CI

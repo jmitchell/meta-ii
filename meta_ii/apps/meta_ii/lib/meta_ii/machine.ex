@@ -1,6 +1,5 @@
 defmodule MetaII.Machine do
   @bytes_per_instruction 4
-  @bytes_per_word 4
   @print_area_size 100
 
   def interpret(src, input) when is_binary(src) and is_binary(input) do
@@ -59,7 +58,7 @@ defmodule MetaII.Machine do
     end
   end
   defp parse_line(label) do
-    {:label, label}
+    {:ok, {:label, label}}
   end
 
   defp parse_op(" " <> op), do: parse_op(op)
@@ -69,6 +68,7 @@ defmodule MetaII.Machine do
   defp parse_op("CI"), do: :copy_input
   defp parse_op("OUT"), do: :output
   defp parse_op("END"), do: :end
+  defp parse_op("ADR" <> ident), do: {:address, ident}
   defp parse_op(x), do: {:error, "Unrecognized assembly op code: #{x}"}
 
   defp parse_string(op, " " <> s), do: parse_string(op, s)
@@ -91,7 +91,7 @@ defmodule MetaII.Machine do
   # defp next_instruction_addr(addr, {:load_literal, _}), do: addr + 9
   # defp next_instruction_addr(addr, {:edit, _}), do: addr + 2
   # defp next_instruction_addr(addr, {:space, n}), do: addr + n
-  defp next_instruction_addr(addr, _code), do: addr + @bytes_per_word
+  defp next_instruction_addr(addr, _code), do: addr + @bytes_per_instruction
 
   defp dereference_labels(assembly) do
     deref = fn
@@ -99,6 +99,11 @@ defmodule MetaII.Machine do
         case Map.get(assembly.labels, ref) do
           nil -> {:error, "Unrecognized label reference: '#{ref}'"}
           label_addr -> {:ok, {addr, {op, label_addr}}}
+        end
+      {addr, {:address, label}} ->
+        case assembly[:labels] |> Map.get(String.trim label) do
+          nil -> {:error, "Label '#{label}' not found"}
+          lbl_addr -> {:ok, {addr, {:branch, lbl_addr}}}
         end
       {addr, instr} -> {:ok, {addr, instr}}
     end
@@ -227,9 +232,6 @@ defmodule MetaII.Machine do
     |> update(:output_col, 8)
     |> increment_pc
   end
-  # def step(state, {:address, ident}) do
-
-  # end
   def step(_state, op) do
     {:error, "Unrecognized op #{inspect op}"}
   end
