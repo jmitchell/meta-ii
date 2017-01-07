@@ -62,16 +62,50 @@ defmodule MetaII.Compiler do
     ## OUT1 ##
 
             # "OUT1 ="
+    OUT1                        # PROGRAM > ST > .ID .LABEL *
+
             # "'*1' .OUT('GN1') /"
+            TST '*1'            #         > ST > EX1 > EX2 > EX3 > .STRING
+            BF  A01             #                    > EX2
+            CL  'GN1'           #                    > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                           > OUTPUT
+    A01                         #                    > EX2
+            BT  A02             #              > EX1$ > '/' > .OUT('BT ' *1)
+
             # "'*2' .OUT('GN2') /"
+            TST '*2'            #                     > '/' > EX2 > EX3 > .STRING
+            BF  A03             #                           > EX2
+            CL  'GN2'           #                           > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                                  > OUTPUT
+    A03                         #                           > EX2
+            BT  A02             #              > EX1$ > '/' > .OUT('BT ' *1)
+
             # "'*' .OUT('CI') /"
+            TST '*'             #                     > '/' > EX2 > EX3 > .STRING
+            BF  A04             #                           > EX2
+            CL  'CI'            #                           > EX2$ > OUTPUT > OUT1 > .STRING
+            OUT                 #                                  > OUTPUT
+    A04                         #                           > EX2
+            BT  A02             #              > EX1$ > '/' > .OUT('BT ' *1)
+
             # ".STRING .OUT('CL ' *)"
+            SR                  #                     > '/' > EX2 > EX3 > '.STRING'
+            BF  A05             #                           > EX2
+            CL  'CL '           #                           > EX2$ > OUTPUT > OUT1 > .STRING
+            CI                  #                                    OUTPUT > OUT1 > '*'
+            OUT                 #                                    OUTPUT
+    A05                         #                           > EX2
+    A02                         #              > EX1
+
             # ".,"
+            R                   #         > ST
 
 
     ## OUTPUT ##
 
             # "OUTPUT ="
+    OUTPUT                      # PROGRAM > ST > .ID .LABEL *
+
             # "('.OUT' '(' $ OUT1 ')' /"
             # "'.LABEL' .OUT('LB') OUT1)"
             # ".OUT('OUT')"
@@ -81,6 +115,8 @@ defmodule MetaII.Compiler do
     ## EX3 ##
 
             # "EX3 ="
+    EX3                         # PROGRAM > ST > .ID .LABEL *
+
             # ".ID .OUT ('CLL' *) /"
             # ".STRING .OUT('TST' *) /"
             # "'.ID' .OUT('ID') /"
@@ -95,6 +131,8 @@ defmodule MetaII.Compiler do
     ## EX2 ##
 
             # "EX2 ="
+    EX2                         # PROGRAM > ST > .ID .LABEL *
+
             # "(EX3 .OUT('BF ' *1) /"
             # "OUTPUT)"
             # "$(EX3 .OUT('BE') /"
@@ -106,6 +144,7 @@ defmodule MetaII.Compiler do
     ## EX1 ##
 
             # "EX1 ="
+    EX1                         # PROGRAM > ST > .ID .LABEL *
             # "EX2 $('/' .OUT('BT ' *1) EX2) .LABEL *1"
             # ".,"
 
@@ -149,7 +188,7 @@ defmodule MetaII.Compiler do
 
             # "'.SYNTAX' .ID .OUT('ADR' *) $ ST"
             TST '.SYNTAX'       #         > ST > EX1 > EX2 > EX3 > .STRING
-            BF _03              #                    > EX2
+            BF  _03             #                    > EX2
             ID                  #                    > EX2$ > EX3 > '.ID'
             BE                  #                    > EX2$
             CL  'ADR'           #                    > EX2$ > OUTPUT > OUT1 > .STRING
