@@ -1,5 +1,5 @@
 defmodule MetaII.Machine do
-  @bytes_per_instruction 4
+  @bytes_per_instruction 1
   @print_area_size 100
 
   def interpret(src, input) when is_binary(src) and is_binary(input) do
@@ -8,7 +8,12 @@ defmodule MetaII.Machine do
     |> Map.put(:input, input)
     |> Map.put(:output, [""])
     |> Map.put(:pc, 0)
+    |> Map.put(:output_col, 8)
     |> interpret
+  end
+  def interpret({:halt, reason}) do
+    IO.puts "ERROR: machine halted"
+    IO.puts "reason: #{reason}"
   end
   def interpret(state) do
     case state |> step do
@@ -39,8 +44,11 @@ defmodule MetaII.Machine do
             address: next_instruction_addr(context.address, code)}
         {:ok, {:label, label}} ->
           # TODO: ensure label isn't already used
+          # TODO: revert temporary hack to assign labels their own address
           %{context |
-            labels: Map.put_new(context.labels, label, context.address)}
+            labels: Map.put_new(context.labels, label, context.address),
+            instructions: Map.put_new(context.instructions, context.address, {:label_line, label}),
+            address: next_instruction_addr(context.address, {:label_line, label})}
         error -> error
       end
     end
@@ -63,12 +71,23 @@ defmodule MetaII.Machine do
 
   defp parse_op(" " <> op), do: parse_op(op)
   defp parse_op("TST" <> str), do: parse_string(:test, str)
+  defp parse_op("ID"), do: :identifier
+  defp parse_op("NUM"), do: :number
+  defp parse_op("SR"), do: :string
+  defp parse_op("CLL " <> ident), do: {:call, label ident}
+  defp parse_op("R"), do: :return
+  defp parse_op("SET"), do: :set
+  defp parse_op("BT " <> ident), do: {:branch_true, label ident}
+  defp parse_op("BF " <> ident), do: {:branch_false, label ident}
   defp parse_op("BE"), do: :branch_error
   defp parse_op("CL " <> str), do: parse_string(:copy_literal, str)
   defp parse_op("CI"), do: :copy_input
+  defp parse_op("GN1"), do: :generate1
+  defp parse_op("GN2"), do: :generate2
+  defp parse_op("LB"), do: :label
   defp parse_op("OUT"), do: :output
+  defp parse_op("ADR" <> ident), do: {:branch, label ident}
   defp parse_op("END"), do: :end
-  defp parse_op("ADR" <> ident), do: {:address, ident}
   defp parse_op(x), do: {:error, "Unrecognized assembly op code: #{x}"}
 
   defp parse_string(op, " " <> s), do: parse_string(op, s)
@@ -79,31 +98,18 @@ defmodule MetaII.Machine do
     end
   end
 
+  def label(ident) when is_binary(ident) do
+    {:label_ref, ident |> String.trim}
+  end
 
-  # defp next_instruction_addr(addr, :equal), do: addr + 1
-  # defp next_instruction_addr(addr, :multiply), do: addr + 1
-  # defp next_instruction_addr(addr, :add), do: addr + 1
-  # defp next_instruction_addr(addr, :subtract), do: addr + 1
-  # defp next_instruction_addr(addr, :print), do: addr + 1
-  # defp next_instruction_addr(addr, :halt), do: addr + 1
-  # defp next_instruction_addr(addr, :end), do: addr + 1
-  # defp next_instruction_addr(addr, {:block, n}), do: addr + (n * 8)
-  # defp next_instruction_addr(addr, {:load_literal, _}), do: addr + 9
-  # defp next_instruction_addr(addr, {:edit, _}), do: addr + 2
-  # defp next_instruction_addr(addr, {:space, n}), do: addr + n
   defp next_instruction_addr(addr, _code), do: addr + @bytes_per_instruction
 
   defp dereference_labels(assembly) do
     deref = fn
       {addr, {op, {:label_ref, ref}}} ->
         case Map.get(assembly.labels, ref) do
-          nil -> {:error, "Unrecognized label reference: '#{ref}'"}
+          nil -> {:error, "Operation #{inspect op} at line #{addr+1} references non-existent label #{ref}"}
           label_addr -> {:ok, {addr, {op, label_addr}}}
-        end
-      {addr, {:address, label}} ->
-        case assembly[:labels] |> Map.get(String.trim label) do
-          nil -> {:error, "Label '#{label}' not found"}
-          lbl_addr -> {:ok, {addr, {:branch, lbl_addr}}}
         end
       {addr, instr} -> {:ok, {addr, instr}}
     end
@@ -145,16 +151,17 @@ defmodule MetaII.Machine do
   def step(state, :identifier), do: state |> match_input(~S(\p{L}\p{Xan}*)) |> increment_pc
   def step(state, :number), do: state |> match_input(~S(\d+)) |> increment_pc
   def step(state, :string), do: state |> match_input(~S('[^']*')) |> increment_pc
-  def step(%{pc: pc, stack: stk} = state, {:call, address}) do
+  def step(%{pc: pc} = state, {:call, address}) do
     exit_addr = pc + @bytes_per_instruction
     new_stack =
-      case stk do
+      case state |> Map.get(:stack, []) do
         [nil, nil | s] ->
           [nil, nil, %{push_count: 1, exit: exit_addr} | s]
         s ->
           [nil, nil, %{push_count: 3, exit: exit_addr} | s]
       end
-    %{state | pc: address, stack: new_stack}
+    %{state | pc: address}
+    |> update(:stack, new_stack)
   end
   def step(%{stack: [_, _, %{push_count: n, exit: addr} | stk]} = state, :return) do
     case n do
@@ -183,7 +190,7 @@ defmodule MetaII.Machine do
     if sw do state |> increment_pc else state |> update(:pc, address) end
   end
   def step(%{switch: sw} = state, :branch_error) do
-    if sw do state |> increment_pc else {:halt, "Branched to error with state:\n#{inspect state}"} end
+    if sw do state |> increment_pc else {:halt, "Branched to error with state:\n#{inspect state, pretty: true}\noutput card:\n'''\n#{state[:card]}\n'''"} end
   end
   def step(state, {:copy_literal, str}) do
     %{state | output: [Map.get(state, :output, []) | [str <> " "]]}
@@ -225,12 +232,20 @@ defmodule MetaII.Machine do
     prefix =
       String.duplicate(" ", Map.get(state, :output_col, 1) - 1)
     card =
-      Map.get(state, :card, "") <> prefix <> output_string(state)
+      Map.get(state, :card, "") <> prefix <> output_string(state) <> "\n"
 
     state
     |> update(:card, card)
     |> update(:output_col, 8)
+    |> update(:output, [""])
     |> increment_pc
+  end
+  def step(state, {:label_line, _}) do
+    # Label lines are dummy instructions. They could be filtered out
+    # from the instructions at parse time, but it is convenient to
+    # include them so addresses correspond to line
+    # numbers. Interpreting one is a no-op.
+    state |> increment_pc
   end
   def step(_state, op) do
     {:error, "Unrecognized op #{inspect op}"}
@@ -240,6 +255,12 @@ defmodule MetaII.Machine do
 
   defp trimmed_input(state), do: String.trim_leading(state[:input])
 
+  defp match_input(state, "("), do: state |> match_input(~S<\(>)
+  defp match_input(state, ")"), do: state |> match_input(~S<\)>)
+  defp match_input(state, "*"), do: state |> match_input(~S<\*>)
+  defp match_input(state, "*1"), do: state |> match_input(~S<\*1>)
+  defp match_input(state, "*2"), do: state |> match_input(~S<\*2>)
+  defp match_input(state, ".,"), do: state |> match_input(~S<\.,>)
   defp match_input(state, re_str) do
     input = state |> trimmed_input
 
@@ -273,11 +294,11 @@ defmodule MetaII.Machine do
       # TODO: prevent infinite loop by making longer `alpha_prefix`s
       # as needed
 
-      %{state | gen: %{alpha_prefix: new_s, n: 0}}
+      %{state | gen: %{alpha_prefix: new_s, n: 1}}
     end
   end
   defp generate_next(state) do
-    Map.put(state, :gen, %{alpha_prefix: "A", n: 0})
+    Map.put(state, :gen, %{alpha_prefix: "A", n: 1})
   end
 
   defp generated_label(%{gen: %{alpha_prefix: s, n: n}}) do

@@ -231,7 +231,9 @@ defmodule MetaII.Compiler do
             # "(EX3 .OUT('BF ' *1) /"
             CLL EX3             #         > ST > EX1 > EX2 > EX3 > '(' > EX1 > EX2 > EX3 > .ID
             BF  A22             #                                            > EX2 > .OUT('BF ' *1)
-            BF  A23             #                                            > EX2$ > .OUT('BF ' *1)
+            CL  'BF '           #                                            > EX2$ > OUTPUT > OUT1 > .STRING
+            GN1                 #                                                   > OUTPUT > OUT1 > '*1'
+            OUT                 #                                                   > OUTPUT
     A22                         #                                            > EX2
             BT  A24             #                                      > EX1 > '/' > .OUT('BT ' *1)
 
