@@ -41,7 +41,7 @@ defmodule ValgolI.Compiler do
 
     IDSEQ1 = .ID .LABEL * .OUT('BLK 1') .,
 
-    IDSEQ = IDSEQ1 $('.' IDSEQ1) .,
+    IDSEQ = IDSEQ1 $(',' IDSEQ1) .,
 
     DEC = '.REAL' .OUT('B  ' *1) IDSEQ .LABEL *1 .,
 

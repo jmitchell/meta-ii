@@ -142,44 +142,6 @@ defmodule MetaII.Compiler.Test do
     assert {:ok, %{input: "", output: [""], card: "       SET \n"}} = MetaII.Machine.interpret(meta_ii_machine, input)
   end
 
-  test "backtracking repetition sequence?" do
-    # I don't know yet whether this test is supposed to pass.
-    #
-    # My reading of the VALGOL I grammar and the example program
-    # suggests it should pass, in which case there's a bug in my META
-    # II hand-compiled compiler or, less likely, in the META II
-    # assembly interpreter. A fix for that would probably involve
-    # adding backtracking to repetition sequences (`$`), although such
-    # a change must be justified by the META II definition.
-    #
-    # Alternatively, the test should fail, in which case there may be
-    # a bug in the VALGOL I grammar. The fix would involve changing
-    # the IDSEQ delimiter, `.`, to a token that doesn't collide with
-    # the DEC terminator and patching the example program
-    # accordingly. In this test the equivalent would be changing `':'`
-    # to, perhaps, `','` and then changing all the `x :` lines in the
-    # input to `x ,`.
-    meta_ii_impl =
-    """
-    .SYNTAX
-    X = 'x' ':' .,
-    PROGRAM = $ X ':end' .OUT('end') .,
-    .END
-    """
-
-    input =
-    """
-    x :
-    x :
-    x :end
-    """
-
-    meta_ii_machine =
-      meta_ii_impl |> Compiler.compile
-
-    assert {:ok, %{input: "", output: [""], card: "       end \n"}} = MetaII.Machine.interpret(meta_ii_machine, input)
-  end
-
   test "bootstrap" do
     definition = Compiler.meta_ii_impl
     machine = Compiler.meta_ii_machine |> normalize_assembly
