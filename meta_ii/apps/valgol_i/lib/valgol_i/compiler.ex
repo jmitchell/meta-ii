@@ -35,9 +35,9 @@ defmodule ValgolI.Compiler do
          ST '.ELSE' .OUT('B  ' *2) .LABEL *1
          ST .LABEL *2 .,
 
-    IOST = 'EDIT' '(' EXP '.' .STRING
+    IOST = 'EDIT' '(' EXP ',' .STRING
          .OUT('EDT' *) ')' /
-         '.PRINT' .OUT('PNT') .,
+         'PRINT' .OUT('PNT') .,
 
     IDSEQ1 = .ID .LABEL * .OUT('BLK 1') .,
 
