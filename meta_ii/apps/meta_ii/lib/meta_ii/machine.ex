@@ -300,13 +300,25 @@ defmodule MetaII.Machine do
 
   defp trimmed_input(state), do: String.trim_leading(state[:input])
 
-  defp match_input(state, "("), do: state |> match_input(~S<\(>)
-  defp match_input(state, ")"), do: state |> match_input(~S<\)>)
-  defp match_input(state, "*"), do: state |> match_input(~S<\*>)
-  defp match_input(state, "*1"), do: state |> match_input(~S<\*1>)
-  defp match_input(state, "*2"), do: state |> match_input(~S<\*2>)
-  defp match_input(state, ".,"), do: state |> match_input(~S<\.,>)
-  defp match_input(state, "$"), do: state |> match_input(~S<\$>)
+  defp match_input(state, str) when is_binary(str) do
+    IO.puts "Attempting to match '#{str}' ..."
+    input = state |> trimmed_input
+    IO.puts "... in '#{input |> String.slice(0..29)}'"
+    if input |> String.starts_with?(str) do
+      n = String.length(str)
+      rest = input |> String.slice(n..String.length(input))
+      IO.puts "\t\tmatched '#{str}'\n\t\trest: #{rest |> inspect |> String.slice(0..29)} ..."
+
+      state
+      |> update(:delete_buffer, str)
+      |> update(:input, rest)
+      |> update(:switch, true)
+    else
+      state
+      |> update(:input, input)
+      |> update(:switch, false)
+    end
+  end
   defp match_input(state, atom) when is_atom(atom) do
     case atom do
       :identifier -> "        ID"
@@ -323,12 +335,12 @@ defmodule MetaII.Machine do
        }
        |> Map.get(atom)
 
-    match_input(state, re)
+    match_input(state, {:re, re})
   end
-  defp match_input(state, re_str) when is_binary(re_str) do
+  defp match_input(state, {:re, re}) when is_binary(re) do
     input = state |> trimmed_input
 
-    case Regex.run(~r/\A(#{re_str})(.*\Z)/s, input) do
+    case Regex.run(~r/\A(#{re})(.*\Z)/s, input) do
       [_, input, rest] ->
         IO.puts "\t\tmatched '#{input}'\n\t\trest: #{rest |> inspect |> String.slice(0..29)} ..."
         state
