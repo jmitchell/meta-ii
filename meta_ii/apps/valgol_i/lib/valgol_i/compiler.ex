@@ -24,7 +24,7 @@ defmodule ValgolI.Compiler do
     EXP1 = TERM $('+' TERM .OUT('ADD') /
          '-' TERM .OUT('SUB') ) .,
 
-    EXP = EXP1 ( '.*' EXP1 .OUT('EQU') / .EMPTY) .,
+    EXP = EXP1 ( '.=' EXP1 .OUT('EQU') / .EMPTY) .,
 
     ASSIGNST = EXP '=' .ID .OUT('ST ' *) .,
 
