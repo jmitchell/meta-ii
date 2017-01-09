@@ -14,6 +14,8 @@ defmodule ValgolICompilerTest do
   """
 
   test "compile example program" do
-    IO.puts "Compiled VALGOL I program: #{inspect ValgolI.Compiler.compile(@example_program)}"
+    compiler_machine = ValgolI.Compiler.compile(@example_program)
+    IO.puts "VALGOL I Compiler as a META II machine:\n#{inspect compiler_machine, pretty: true}"
+    refute {:error, _} = compiler_machine
   end
 end
