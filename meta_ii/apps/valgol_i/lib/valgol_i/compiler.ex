@@ -7,6 +7,18 @@ defmodule ValgolI.Compiler do
     |> MetaII.Machine.interpret(input)
   end
 
+  def compile_and_run(program, input) do
+    case program |> compile do
+      {:ok, compiled_program} ->
+        compiled_program
+        |> Map.get(:card)
+        |> ValgolI.Machine.parse
+        |> Map.put(:input, input)
+        |> ValgolI.Machine.interpret
+      err -> err
+    end
+  end
+
   def meta_ii_impl do
     """
     .SYNTAX PROGRAM

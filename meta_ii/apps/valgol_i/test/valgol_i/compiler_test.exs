@@ -24,6 +24,14 @@ defmodule ValgolI.Compiler.Test do
     assert valgol_assembly == example_program
   end
 
+  test "compile and run example program" do
+    input = ""
+    result =
+      @example_program |> Compiler.compile_and_run(input)
+
+    IO.puts result[:output]
+  end
+
   def normalize_assembly(asm) do
     asm
     |> String.split("\n")
