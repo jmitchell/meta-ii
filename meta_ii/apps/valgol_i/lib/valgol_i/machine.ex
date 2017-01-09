@@ -213,10 +213,10 @@ defmodule ValgolI.Machine do
     end
   end
 
-  defp parse_string(op, <<nn :: bytes-size(2)>> <> "'" <> str) do
-    case Integer.parse(nn) do
-      {len, _} -> {op, String.slice(str, 0, len)}
-      _ -> {:error, "Invalid string length signifier: '#{nn}'"}
+  defp parse_string(op, "'" <> str) do
+    case str |> String.split("'") do
+      [str | _] -> {op, str}
+      [_] -> {:error, ~s(String "#{str}" is missing close quote)}
     end
   end
 
