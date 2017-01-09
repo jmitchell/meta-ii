@@ -1,10 +1,6 @@
 defmodule ValgolI.Compiler do
-  # TODO: Create a new META II project which implements the META II
-  # compiler by hand. Use it here so the META II source for the VALGOL
-  # I compiler (Figure 1) is sufficient.
-
-  # TODO: Move `compiler` and `compile` into the META II compiler
-  # project and make the local `meta_ii_impl` a callback
+  # TODO: Move `compile` into the META II compiler project and make
+  # the local `meta_ii_impl` a callback
   def compile(input) do
     meta_ii_impl
     |> MetaII.Compiler.compile
