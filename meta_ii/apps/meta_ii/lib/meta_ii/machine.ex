@@ -330,7 +330,7 @@ defmodule MetaII.Machine do
     re =
       %{
         identifier: ~S(\p{L}\p{Xan}*),
-        number: ~S(\d+),
+        number: ~S<\d+(?:\.\d+)?>,
         string: ~S('[^']*'),
        }
        |> Map.get(atom)
