@@ -224,7 +224,7 @@ defmodule ValgolI.Machine do
     """
            B   A01
     X
-           BLK 001
+           BLK 1
     A01
            LDL 0
            ST  X
@@ -240,7 +240,7 @@ defmodule ValgolI.Machine do
            MLT
            LDL 1
            ADD
-           EDT 01'*'
+           EDT '*'
            PNT
            LD  X
            LDL 0.1
