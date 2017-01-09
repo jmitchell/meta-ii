@@ -1,42 +1,8 @@
-defmodule ValgolIMachineTest do
+defmodule ValgolI.Machine.Test do
   use ExUnit.Case
   doctest ValgolI.Machine
 
   alias ValgolI.Machine
-
-  def example_program do
-    """
-           B   A01
-    X
-           BLK 001
-    A01
-           LDL 0
-           ST  X
-    A02
-           LD  X
-           LDL 3
-           EQU
-           BTP A03
-           LD  X
-           LD  X
-           MLT
-           LDL 10
-           MLT
-           LDL 1
-           ADD
-           EDT 01'*'
-           PNT
-           LD  X
-           LDL 0.1
-           ADD
-           ST  X
-           B   A02
-    A03
-           HLT
-           SP  1
-           END
-    """
-  end
 
   defp parsed_program do
     %{
@@ -104,7 +70,7 @@ defmodule ValgolIMachineTest do
   end
 
   test "parse example program" do
-    asm = example_program |> Machine.parse
+    asm = Machine.example_program |> Machine.parse
     assert asm == parsed_program
   end
 
