@@ -152,9 +152,9 @@ defmodule MetaII.Machine.Test do
         stack: [:a, nil, 1, 2, 3],
         output: ["dummy "],
       } |> Machine.step(:generate1)
-      assert %{stack: [:a, "A00", 1, 2, 3],
-               output: [["dummy "] | ["A00 "]],
-               gen: %{alpha_prefix: "A", n: 0}} = actual
+      assert %{stack: [:a, "A01", 1, 2, 3],
+               output: [["dummy "] | ["A01 "]],
+               gen: %{alpha_prefix: "A", n: 1}} = actual
     end
 
     test "generate2: generate and output a new label" do
@@ -162,9 +162,9 @@ defmodule MetaII.Machine.Test do
         stack: [nil, :b, 1, 2, 3],
         output: ["dummy "],
       } |> Machine.step(:generate2)
-      assert %{stack: ["A00", :b, 1, 2, 3],
-               output: [["dummy "] | ["A00 "]],
-               gen: %{alpha_prefix: "A", n: 0}} = actual
+      assert %{stack: ["A01", :b, 1, 2, 3],
+               output: [["dummy "] | ["A01 "]],
+               gen: %{alpha_prefix: "A", n: 1}} = actual
     end
 
     test "label: set output counter to card column 1" do
@@ -180,7 +180,7 @@ defmodule MetaII.Machine.Test do
         output_col: 3,
         card: "",
       } |> Machine.step(:output)
-      assert %{card: "  this is a test ", output_col: 8} = actual
+      assert %{card: "  this is a test \n", output_col: 8} = actual
     end
   end
 
@@ -191,13 +191,14 @@ defmodule MetaII.Machine.Test do
                 ADR START
         FALSESTART
                 CL  'wrong droid'
-                END
+                CLL STOP
         START
                 TST '.SYNTAX'
                 CL  'read'
                 CI
                 CL  ' from input'
                 OUT
+        STOP
                 END
         """
       input =
@@ -205,7 +206,7 @@ defmodule MetaII.Machine.Test do
         .SYNTAX PROGRAM
         """
 
-      assert %{card: "read .SYNTAX from input "} = Machine.interpret(program, input)
+      assert {:ok, %{card: "       read .SYNTAX from input \n"}} = Machine.interpret(program, input)
     end
   end
 end

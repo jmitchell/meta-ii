@@ -11,7 +11,7 @@ defmodule MetaII.Mixfile do
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps()]
   end
 
   # Configuration for the OTP application
@@ -35,6 +35,6 @@ defmodule MetaII.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:valgol_i, in_umbrella: true, only: [:test]}]
+    []
   end
 end

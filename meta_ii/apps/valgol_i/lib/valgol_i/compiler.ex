@@ -5,17 +5,12 @@ defmodule ValgolI.Compiler do
 
   # TODO: Move `compiler` and `compile` into the META II compiler
   # project and make the local `meta_ii_impl` a callback
-  def compiler(compiler_src) do
-    {:error, "TODO"}
+  def compile(input) do
+    IO.puts "VALGOL I Compiler (a META II machine): #{inspect meta_ii_machine}"
   end
 
-  def compile(src) do
-    meta_ii_impl
-    |> compiler
-    |> compile(src)
-  end
-  defp compile(compiler, src) do
-    {:error, "TODO"}
+  def meta_ii_machine do
+    meta_ii_impl |> MetaII.Compiler.compile
   end
 
   def meta_ii_impl do

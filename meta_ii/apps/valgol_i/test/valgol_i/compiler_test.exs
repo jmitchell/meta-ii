@@ -13,8 +13,7 @@ defmodule ValgolICompilerTest do
   .END
   """
 
-  @tag :skip
   test "compile example program" do
-    assert Compiler.compile(@example_program) == ValgolIMachineTest.example_program
+    IO.puts "Compiled VALGOL I program: #{inspect ValgolI.Compiler.compile(@example_program)}"
   end
 end
