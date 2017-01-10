@@ -19,7 +19,6 @@ defmodule MetaII.Compiler.Test do
       meta_ii_impl |> Compiler.compile
 
     {:ok, result} = MetaII.Machine.interpret(meta_ii_machine, input)
-    IO.puts "CARD: '''\n#{result.card}\n'''"
     assert result.input == ""
     assert result.output == [""]
     assert result.card == ~s(       found "a" \n       found "b" \n)
@@ -56,12 +55,7 @@ defmodule MetaII.Compiler.Test do
     meta_ii_machine =
       meta_ii_impl |> Compiler.compile
 
-    IO.puts "\nMETA II Machine: '''\n#{meta_ii_machine}\n'''"
-    IO.puts "\nINPUT: '''\n#{inspect input, pretty: true}\n'''"
-
     {:ok, result} = MetaII.Machine.interpret(meta_ii_machine, input)
-    # IO.puts "\nCARD: '''\n#{result.card}\n'''"
-    IO.puts "\nRESULT: #{inspect result, pretty: true}"
     assert result.input == ""
     assert result.output == [""]
   end
@@ -99,7 +93,6 @@ defmodule MetaII.Compiler.Test do
       meta_ii_impl |> Compiler.compile
 
     {:ok, result} = MetaII.Machine.interpret(meta_ii_machine, input)
-    IO.puts "CARD: '''\n#{result.card}\n'''"
     assert result.input == ""
     assert result.output == [""]
     assert result.card == ~s(       found "a" \n       found "a" \n       found "a" \n)
@@ -120,7 +113,6 @@ defmodule MetaII.Compiler.Test do
       meta_ii_impl |> Compiler.compile
 
     {:ok, result} = MetaII.Machine.interpret(meta_ii_machine, input)
-    IO.puts "CARD: '''\n#{result.card}\n'''"
     assert result.input == ""
     assert result.output == [""]
     assert result.card == ~s(       found "a" \n       found "a" \n       found "a" \n)

@@ -2,6 +2,8 @@ defmodule MetaII.Machine do
   @bytes_per_instruction 1
   @print_area_size 100
 
+  import Logger
+
   def interpret(src, input) when is_binary(src) and is_binary(input) do
     result =
       src
@@ -11,11 +13,9 @@ defmodule MetaII.Machine do
       |> Map.put(:pc, 0)
       |> Map.put(:output_col, 8)
       |> Map.put(:delete_buffer, "")
-      |> IO.inspect(pretty: true, limit: 1000)
       |> interpret
   end
   def interpret({:halt, state, reason}) do
-    IO.puts "CARD:\n'''\n#{state[:card]}\n'''"
     {:error, reason}
   end
   def interpret(state) do
@@ -61,9 +61,9 @@ defmodule MetaII.Machine do
             address: next_instruction_addr(context.address, {:label_line, label})}
         with {:ok, result} <- parse(t, new_context), do: result
       error ->
-        IO.puts "Unexpected parse error: #{inspect error}"
-        IO.puts "Line: #{inspect h}"
-        IO.puts "Context: #{inspect context, pretty: true}"
+        Logger.debug "Unexpected parse error: #{inspect error}"
+        Logger.debug "Line: #{inspect h}"
+        Logger.debug "Context: #{inspect context, pretty: true}"
         error
     end
   end
@@ -169,14 +169,14 @@ defmodule MetaII.Machine do
     end
   end
   def step(state, {:test, str}) do
-    IO.puts("        TST '#{str}'")
+    Logger.info "       TST '#{str}'"
     state |> match_input(str) |> increment_pc
   end
   def step(state, :identifier), do: state |> match_input(:identifier) |> increment_pc
   def step(state, :number), do: state |> match_input(:number) |> increment_pc
   def step(state, :string), do: state |> match_input(:string) |> increment_pc
   def step(%{pc: pc} = state, {:call, address}) do
-    IO.puts "        CLL #{label_at(state, address)}"
+    Logger.info "       CLL #{label_at(state, address)}"
 
     exit_addr = pc + @bytes_per_instruction
     new_stack =
@@ -191,7 +191,7 @@ defmodule MetaII.Machine do
   end
   def step(%{stack: [_, _, %{push_count: n, exit: addr} | stk]} = state, :return) do
     with {_, {:call, call_addr}} <- state[:instructions][addr-1],
-             do: IO.puts "        R    # from #{label_at(state, call_addr)}"
+             do: Logger.info "       R    # from #{label_at(state, call_addr)}"
     case n do
       1 -> %{state | pc: addr, stack: [nil, nil | stk]}
       3 -> %{state | pc: addr, stack: stk}
@@ -200,7 +200,7 @@ defmodule MetaII.Machine do
   end
   def step(%{pc: _, stack: [_, _, %{push_count: n, exit: addr}]} = state, :return) do
     with {_, {:call, call_addr}} <- state[:instructions][addr-1],
-             do: IO.puts "        R    # from #{label_at(state, call_addr)}"
+             do: Logger.info "       R    # from #{label_at(state, call_addr)}"
     case n do
       1 -> %{state | pc: addr, stack: [nil, nil]}
       3 -> %{state | pc: addr, stack: []}
@@ -208,32 +208,32 @@ defmodule MetaII.Machine do
     end
   end
   def step(state, :set) do
-    IO.puts "        SET"
+    Logger.info "       SET"
     state |> update(:switch, true) |> increment_pc
   end
   def step(state, {:branch, address}) do
-    IO.puts "        B   #{label_at(state, address)}"
+    Logger.info "       B   #{label_at(state, address)}"
     state |> update(:pc, address)
   end
   def step(%{switch: sw} = state, {:branch_true, address}) do
-    IO.puts "        BT  #{label_at(state, address)}" <> (if sw do "  # !!" else "" end)
+    Logger.info "       BT  #{label_at(state, address)}" <> (if sw do "  # !!" else "" end)
     if sw do state |> update(:pc, address) else state |> increment_pc end
   end
   def step(%{switch: sw} = state, {:branch_false, address}) do
-    IO.puts "        BF  #{label_at(state, address)}" <> (if sw do "" else "  # !!" end)
+    Logger.info "       BF  #{label_at(state, address)}" <> (if sw do "" else "  # !!" end)
     if sw do state |> increment_pc else state |> update(:pc, address) end
   end
   def step(%{switch: sw} = state, :branch_error) do
-    IO.puts "        BE" <> (if sw do "" else "  # !!" end)
+    Logger.info "       BE" <> (if sw do "" else "  # !!" end)
     if sw do state |> increment_pc else {:halt, state, "Branched to error"} end
   end
   def step(state, {:copy_literal, str}) do
-    IO.puts "        CL  '#{str}'"
+    Logger.info "       CL  '#{str}'"
     %{state | output: [Map.get(state, :output, []) | [str <> " "]]}
     |> increment_pc
   end
   def step(%{delete_buffer: b} = state, :copy_input) do
-    IO.puts "        CI  # '#{b}'"
+    Logger.info "       CI  # '#{b}'"
     %{state | output: [Map.get(state, :output, []) | [b]]}
     |> increment_pc
   end
@@ -243,19 +243,19 @@ defmodule MetaII.Machine do
         state = state |> generate_next
         label = generated_label(state)
 
-        IO.puts "        GN1    # #{label}"
+        Logger.info "       GN1    # #{label}"
 
         %{state | output: [out | [label <> " "]], stack: [a, label | c]}
         |> increment_pc
       %{output: out, stack: [_, b | _]} ->
-        IO.puts "        GN1    # #{b}"
+        Logger.info "       GN1    # #{b}"
 
         %{state | output: [out | [b <> " "]]}
         |> increment_pc
     end
   end
   def step(state, :generate2) do
-    IO.puts "        GN2"
+    Logger.info "       GN2"
     state = state |> generate_next
     label = generated_label(state)
 
@@ -268,11 +268,11 @@ defmodule MetaII.Machine do
     |> increment_pc
   end
   def step(state, :label) do
-    IO.puts "        LB"
+    Logger.info "       LB"
     state |> update(:output_col, 1) |> increment_pc
   end
   def step(state, :output) do
-    IO.puts "        OUT"
+    Logger.info "       OUT"
     prefix =
       String.duplicate(" ", Map.get(state, :output_col, 1) - 1)
     card =
@@ -285,7 +285,7 @@ defmodule MetaII.Machine do
     |> increment_pc
   end
   def step(state, {:label_line, lbl}) do
-    IO.puts "Starting #{lbl} ..."
+    Logger.debug "Starting #{lbl} ..."
     # Label lines are dummy instructions. They could be filtered out
     # from the instructions at parse time, but it is convenient to
     # include them so addresses correspond to line
@@ -301,13 +301,12 @@ defmodule MetaII.Machine do
   defp trimmed_input(state), do: String.trim_leading(state[:input])
 
   defp match_input(state, str) when is_binary(str) do
-    IO.puts "Attempting to match '#{str}' ..."
     input = state |> trimmed_input
-    IO.puts "... in '#{input |> String.slice(0..29)}'"
+    Logger.debug "Attempting to match '#{str}' in '#{input |> String.slice(0..29)}"
     if input |> String.starts_with?(str) do
       n = String.length(str)
       rest = input |> String.slice(n..String.length(input))
-      IO.puts "\t\tmatched '#{str}'\n\t\trest: #{rest |> inspect |> String.slice(0..29)} ..."
+      Logger.debug "\t\tmatched '#{str}'\n\t\trest: #{rest |> inspect |> String.slice(0..29)} ..."
 
       state
       |> update(:delete_buffer, str)
@@ -321,11 +320,11 @@ defmodule MetaII.Machine do
   end
   defp match_input(state, atom) when is_atom(atom) do
     case atom do
-      :identifier -> "        ID"
-      :number -> "        NUM"
-      :string -> "        SR"
+      :identifier -> "       ID"
+      :number -> "       NUM"
+      :string -> "       SR"
     end
-    |> IO.puts
+    |> Logger.info
 
     re =
       %{
@@ -342,7 +341,7 @@ defmodule MetaII.Machine do
 
     case Regex.run(~r/\A(#{re})(.*\Z)/s, input) do
       [_, input, rest] ->
-        IO.puts "\t\tmatched '#{input}'\n\t\trest: #{rest |> inspect |> String.slice(0..29)} ..."
+        Logger.debug "\t\tmatched '#{input}'\n\t\trest: #{rest |> inspect |> String.slice(0..29)} ..."
         state
         |> update(:delete_buffer, input)
         |> update(:input, rest)
