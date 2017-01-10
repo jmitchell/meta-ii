@@ -2,7 +2,7 @@ defmodule ValgolI.Compiler do
   # TODO: Move `compile` into the META II compiler project and make
   # the local `meta_ii_impl` a callback
   def compile(input) do
-    meta_ii_impl
+    meta_ii_impl()
     |> MetaII.Compiler.compile
     |> MetaII.Machine.interpret(input)
   end

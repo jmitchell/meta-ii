@@ -117,7 +117,7 @@ defmodule ValgolI.Machine do
       :print ->
         advance_pc
         |> update.(:output, &[&1 | [String.trim_trailing(state[:print_area]) <> "\n"]])
-        |> update.(:print_area, fn _ -> clean_print_area end)
+        |> update.(:print_area, fn _ -> clean_print_area() end)
         |> step
       :halt ->
         advance_pc |> step
@@ -215,8 +215,8 @@ defmodule ValgolI.Machine do
 
   defp parse_string(op, "'" <> str) do
     case str |> String.split("'") do
-      [str | _] -> {op, str}
       [_] -> {:error, ~s(String "#{str}" is missing close quote)}
+      [str | _] -> {op, str}
     end
   end
 
