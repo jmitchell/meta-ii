@@ -188,7 +188,7 @@ defmodule MetaII.Machine do
     |> update(:stack, new_stack)
   end
   def step(%{stack: [_, _, %{push_count: n, exit: addr} | stk]} = state, :return) do
-    with {_, {:call, call_addr}} <- state[:instructions][addr-1],
+    with {_, {:call, call_addr}} <- state[:instructions][addr - 1],
              do: info "       R    # from #{label_at(state, call_addr)}"
     case n do
       1 -> %{state | pc: addr, stack: [nil, nil | stk]}
@@ -197,7 +197,7 @@ defmodule MetaII.Machine do
     end
   end
   def step(%{pc: _, stack: [_, _, %{push_count: n, exit: addr}]} = state, :return) do
-    with {_, {:call, call_addr}} <- state[:instructions][addr-1],
+    with {_, {:call, call_addr}} <- state[:instructions][addr - 1],
              do: info "       R    # from #{label_at(state, call_addr)}"
     case n do
       1 -> %{state | pc: addr, stack: [nil, nil]}
@@ -260,10 +260,11 @@ defmodule MetaII.Machine do
     case state do
       %{output: out, stack: [nil, b | c]} ->
         %{state | output: [out | [label <> " "]], stack: [label, b | c]}
+        |> increment_pc
       %{output: out, stack: [a, _ | _]} ->
         %{state | output: [out | [a <> " "]]}
+        |> increment_pc
     end
-    |> increment_pc
   end
   def step(state, :label) do
     info "       LB"
@@ -318,11 +319,10 @@ defmodule MetaII.Machine do
   end
   defp match_input(state, atom) when is_atom(atom) do
     case atom do
-      :identifier -> "       ID"
-      :number -> "       NUM"
-      :string -> "       SR"
+      :identifier -> info "       ID"
+      :number -> info "       NUM"
+      :string -> info "       SR"
     end
-    |> info
 
     re =
       %{

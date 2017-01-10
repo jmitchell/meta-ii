@@ -10,12 +10,9 @@ defmodule MetaII.Machine.Test do
       assert String.contains?(reason, inspect :not_a_real_op)
     end
 
-    @tag :skip
-    # TODO: broke when labels were included in instructions and
-    # @bytes_per_instruction was changed to 1.
     test "test: input matches argument string" do
       actual = Machine.step(%{input: "  hello world", pc: 12}, {:test, "hello wo"})
-      assert %{input: "rld", delete_buffer: "hello wo", switch: true, pc: 16} = actual
+      assert %{input: "rld", delete_buffer: "hello wo", switch: true, pc: 13} = actual
     end
 
     test "test: input doesn't match argument string" do
@@ -53,9 +50,6 @@ defmodule MetaII.Machine.Test do
       assert %{input: "'missing an endqoute...", switch: false} = actual
     end
 
-    @tag :skip
-    # TODO: broke when labels were included in instructions and
-    # @bytes_per_instruction was changed to 1.
     test "call: enter subroutine at address when stack has two blanks" do
       actual = %{
         pc: 32,
@@ -63,12 +57,9 @@ defmodule MetaII.Machine.Test do
         stack: [nil, nil, :filler],
       } |> Machine.step({:call, 16})
       assert %{pc: 16,
-               stack: [nil, nil, %{push_count: 1, exit: 32 + 4}, :filler]} = actual
+               stack: [nil, nil, %{push_count: 1, exit: 33}, :filler]} = actual
     end
 
-    @tag :skip
-    # TODO: broke when labels were included in instructions and
-    # @bytes_per_instruction was changed to 1.
     test "call: enter subroutine at address when stack doesn't have two blanks" do
       actual = %{
         pc: 32,
@@ -76,7 +67,7 @@ defmodule MetaII.Machine.Test do
         stack: [:filler],
       } |> Machine.step({:call, 16})
       assert %{pc: 16,
-               stack: [nil, nil, %{push_count: 3, exit: 32 + 4}, :filler]} = actual
+               stack: [nil, nil, %{push_count: 3, exit: 33}, :filler]} = actual
     end
 
     test "return: leave a subroutine when push_count == 1" do
@@ -108,28 +99,19 @@ defmodule MetaII.Machine.Test do
       assert %{pc: 64} = %{pc: 100} |> Machine.step({:branch, 64})
     end
 
-    @tag :skip
-    # TODO: broke when labels were included in instructions and
-    # @bytes_per_instruction was changed to 1.
     test "branch_true: set program counter to specified address" do
       assert %{pc: 64} = %{pc: 100, switch: true} |> Machine.step({:branch_true, 64})
-      assert %{pc: 104} = %{pc: 100, switch: false} |> Machine.step({:branch_true, 64})
+      assert %{pc: 101} = %{pc: 100, switch: false} |> Machine.step({:branch_true, 64})
     end
 
-    @tag :skip
-    # TODO: broke when labels were included in instructions and
-    # @bytes_per_instruction was changed to 1.
     test "branch_false: set program counter to specified address" do
       assert %{pc: 64} = %{pc: 100, switch: false} |> Machine.step({:branch_false, 64})
-      assert %{pc: 104} = %{pc: 100, switch: true} |> Machine.step({:branch_false, 64})
+      assert %{pc: 101} = %{pc: 100, switch: true} |> Machine.step({:branch_false, 64})
     end
 
-    @tag :skip
-    # TODO: broke when labels were included in instructions and
-    # @bytes_per_instruction was changed to 1.
     test "branch_error: halt when switch is off" do
-      assert {:halt, _} = %{switch: false} |> Machine.step(:branch_error)
-      assert %{pc: 36} = %{pc: 32, switch: true} |> Machine.step(:branch_error)
+      assert {:halt, _, _} = %{switch: false} |> Machine.step(:branch_error)
+      assert %{pc: 33} = %{pc: 32, switch: true} |> Machine.step(:branch_error)
     end
 
     test "copy_literal: output variable length string" do
