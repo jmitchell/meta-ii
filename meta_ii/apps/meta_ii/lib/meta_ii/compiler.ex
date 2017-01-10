@@ -1,6 +1,6 @@
 defmodule MetaII.Compiler do
   def compile(input) do
-    with {:ok, %{card: card}} <- MetaII.Machine.interpret(meta_ii_machine, input),
+    with {:ok, %{card: card}} <- MetaII.Machine.interpret(meta_ii_machine(), input),
          do: card
   end
 

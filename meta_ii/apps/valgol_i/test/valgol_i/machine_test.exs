@@ -71,11 +71,11 @@ defmodule ValgolI.Machine.Test do
 
   test "parse example program" do
     asm = Machine.example_program |> Machine.parse
-    assert asm == parsed_program
+    assert asm == parsed_program()
   end
 
   test "interpret example program" do
-    state = parsed_program |> Machine.interpret
-    assert state[:output] == program_output
+    state = parsed_program() |> Machine.interpret
+    assert state[:output] == program_output()
   end
 end

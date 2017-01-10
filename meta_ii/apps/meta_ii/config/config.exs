@@ -1,3 +1,5 @@
 use Mix.Config
 
-config :logger, level: :warn
+config :logger, :console,
+  level: :warn,
+  format: "\n[$level] $levelpad$message"
