@@ -29,7 +29,38 @@ defmodule ValgolI.Compiler.Test do
     result =
       @example_program |> Compiler.compile_and_run(input)
 
-    IO.puts result[:output]
+    assert result[:output] == """
+     *
+     *
+     *
+      *
+       *
+        *
+         *
+          *
+           *
+             *
+               *
+                 *
+                   *
+                      *
+                         *
+                            *
+                               *
+                                  *
+                                     *
+                                         *
+                                             *
+                                                 *
+                                                     *
+                                                          *
+                                                               *
+                                                                    *
+                                                                         *
+                                                                              *
+                                                                                   *
+                                                                                         *
+    """
   end
 
   def normalize_assembly(asm) do
