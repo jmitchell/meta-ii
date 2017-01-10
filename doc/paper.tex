@@ -879,8 +879,201 @@ $ ST '.END' .OUT('END').,
 \end{figure}
 
 
-% TODO: continue transcribing Figures, starting from Figure 7 (VALGOL
-% II Compiler written in META II).
+\begin{figure}
+\caption{VALGOL II compiler written in META II}
+\begin{verbatim}
+.SYNTAX PROGRAM
+
+ARRAYPART = '(.' EXP '.)' .OUT('AIA') .,
+
+CALLPART = '(' .OUT('LDF') (EXP $(',' EXP) /
+     .EMPTY) ')' .OUT('CLL') .,
+
+VARIABLE = .ID .OUT('LD ' *) (ARRAYPART / .EMPTY) .,
+
+PRIMARY = 'WHOLE' '(' EXP ')' .OUT('WHL') /
+     .ID .OUT('LD ' *) (ARRAYPART / CALLPART / .EMPTY) /
+     '.TRUE' .OUT('SET') / '.FALSE' .OUT('RST') /
+     'O ' .OUT('RST') / '1 ' .OUT('SET') /
+     .NUMBER .OUT('LDL' *) /
+     '(' EXP ')' .,
+
+TERM = PRIMARY $ ('*' PRIMARY .OUT('MLT') /
+     '/' PRIMARY .OUT('DIV') /
+     './.' PRIMARY .OUT('DIV') .OUT('WHL') ) .,
+
+EXP2 = '-' TERM .OUT('NEG') /
+     '+' TERM / TERM .,
+
+EXP1 = EXP2 $('+' TERM .OUT('ADD') /
+     '-' TERM .OUT('SUB')) .,
+
+RELATION = EXP1 (
+     '.L=' EXP1 .OUT('LEQ') /
+     '.L' EXP1 .OUT('LES') /
+     '.=' EXP1 .OUT('EQU') /
+     '.-=' EXP1 .OUT('EQU') .OUT('NOT') /
+     '.G=' EXP1 .OUT('LES') .OUT('NOT') /
+     '.G' EXP1 .OUT('LEQ') .OUT('NOT') /
+     .EMPTY) .,
+
+BPRIMARY = '.-' RELATION .OUT('NOT') /
+     RELATION .,
+
+BTERM = BPRIMARY $ ('.,' .OUT('BF ' *1)
+     .OUT('POP') BPRIAMRY)
+     .LABEL *1 .,
+
+BEXP1 = BTERM $( '.V' .OUT('BT ' *1)
+     .OUT('POP') BTERM)
+     .LABEL *1 .,
+
+IMPLICATION1 = '.IMP' .OUT('NOT')
+     .OUT('BT ' *1) .OUT('POP')
+     BEXP1 .LABEL *1 .,
+
+IMPLICATION = BEXP1 $ IMPLICATION1 .,
+
+EQUIV = IMPLICATION $('.EQ' .OUT('EQU') ) .,
+
+EXP = '.IF' EXP '.THEN' .OUT('BFP' *1)
+     EXP .OUT('B  ' *2) .LABEL *1
+     '.ELSE' EXP .LABEL *2 /
+     EQUIV .,
+
+ASSIGNPART = '=' EXP ( ASSIGNPART .OUT('ST') /
+     ASSIGNPART / (CALLPART / .EMPTY
+     .OUT('LDF') .OUT('CLL') )
+     .OUT('POP') ) .,
+
+UNTILST = '.UNTIL' .LABEL *1 EXP
+     '.DO' .OUT('BTP' *2) ST
+     .OUT('B  ' *1) .LABEL *2 .,
+
+WHILECLAUSE = '.WHILE' .OUT('BF ' *1)
+     .OUT('POP') EXP .LABEL *1 / .EMPTY .,
+
+FORCLAUSE = VARIABLE '=' .OUT('FLP')
+     .OUT('BFP' *1) EXP '.STEP'
+     .OUT('SST') .OUT('B  ' *2)
+     .LABEL *1 EXP '.UNTIL' .OUT('ADS')
+     .LABEL *2 .OUT('RSR') EXP
+     .OUT('LEQ') WHILECLAUSE '.DO' .,
+
+FORST = '.FOR' .OUT('SET') .LABEL *1
+     FORCLAUSE .OUT('BFP' *2) ST
+     .OUT('RST') .OUT('B  ' *1)
+     .LABEL *2 .,
+
+IOCALL = 'READ' '(' VARIABLE ',' EXP ')' .OUT('RED') /
+     'WRITE' '(' VARIABLE ',' EXP ')' .OUT('WRT') /
+     'EDIT' '(' EXP ',' .STRING
+     .OUT('EDT' *) ')'
+     'PRINT' .OUT('PNT') /
+     'EJECT' .OUT('EJT') .,
+
+IDSEQ1 = .ID .LABEL* .OUT('BLK 1') .,
+
+IDSEQ = IDSEQ1 $(',' IDSEQ1) .,
+
+TYPEDEC = '.REAL' IDSEQ .,
+
+ARRAY1 = .ID .LABEL * '(.' 'O' '..' .NUMBER
+     .OUT('BLK 1') .OUT('BLK' *) '.)' .,
+
+ARRAYDEC = '.ARRAY' ARRAY1 $( ',' ARRAY1) .,
+
+PROCEDURE = '.PROCEDURE' .ID .LABEL *
+     .LABEL *1 .OUT('BLK 1') '('
+     (IDSEQ / .EMPTY) ')' .OUT('SP  1') '.,'
+     ST .OUT('R  ' *1) .,
+
+DEC = TYPEDEC / ARRAYDEC / PROCEDURE .,
+
+BLOCK = '.BEGIN' .OUT('B  ' *1) $(DEC '.,')
+     .LABEL *1 ST $('.,' ST) '.END'
+     (.ID / .EMPTY) .,
+
+UNCONDITIONALST = IOCALL / ASSIGNCALLST /
+     BLOCK .,
+
+CONDST = '.IF' EXP '.THEN' .OUT('BFP' *1)
+     (UNCONDITIONALST ('.ELSE' .OUT('B  ' *2)
+     .LABEL *1 ST .LABEL *2 / .EMTPY
+     .LABEL *1) / (FORST / UNTILST)
+     .LABEL *1) .,
+
+ST = CONDST / UNCONDITIONALST / FORST /
+     UNTILST / .EMPTY .,
+
+PROGRAM = BLOCK
+     .OUT('HLT' .OUT('SP  1') .OUT('END') .,
+
+.END
+\end{verbatim}
+\end{figure}
+
+
+% TODO: Figure (Order list of the VALGOL II machine)
+
+\begin{figure}
+\caption{Example program in VALGOL II}
+\begin{verbatim}
+.BEGIN
+.PROCEDURE DETERMINANT(A, N) .,
+.BEGIN
+.PROCEDURE DUMP() .,
+.BEGIN
+.REAL D .,
+.FOR D = 0 .STEP 1 .UNTIL N-1 .DO
+     WRITE(MATRIX(. N*D .), N) .,
+PRINT
+.END DUMP .,
+.PROCEDURE ABS(X) .,
+     ABS = .IF 0 .L= X .THEN X .ELSE -X .,
+.REAL PRODUCT, FACTOR, TEMP, R, I, J .,
+PRODUCT = 1 .,
+.FOR R = 0 .STEP 1 .UNTIL N-2
+.WHILE PRODUCT .-= 0 .DO .BEGIN
+     I  = R .,
+     .FOR J = R+1 .STEP 1 .UNTIL N-1 .DO
+          .IF ABS( A(. N*I + R .) ) .L
+          ABS( A(. N*J + R .) ) .THEN
+               I = J .,
+     .IF A(. N*I + R .) .= 0 .THEN
+          PRODUCT = 0
+     .ELSE
+          .IF I .-= R .THEN .BEGIN
+               PRODUCT = -PRODUCT .,
+               .FOR J = R .STEP 1 .UNTIL N-1 .DO
+               .BEGIN
+                    TEMP = A(. N*R + J .) .,
+                    A(. N*R + J .) = A (. N* I + J .) .,
+                    A(. N*I + J .) = TEMP .END .END .,
+          TEMP = A(. N*R + R .) .,
+          .FOR I = R+1 .STEP 1 .UNTIL N-1 .DO
+          .BEGIN
+               FACTOR = A(. N*I + R .) / TEMP .,
+               .FOR J = R .STEP 1 .UNTIL N-1 .DO
+                    A(. N*I + J .) = A(. N*I + J .)
+                    -FACTOR * A(. N*R + J .) .,
+          DUMP
+          .END .END .,
+.FOR I = 0 .STEP 1 .UNTIL N-1 .DO
+     PRODUCT = PRODUCT * A(. N*I + I .) .,
+DETERMINANT = PRODUCT
+.END DETERMINANT .,
+.REAL M, W, T ., .ARRAY MATRIX (. 0 .. 24 .) .,
+.UNTIL .FALSE .DO .BEGIN
+     EDIT(I, 'FIND DETERMINANT OF' ) ., PRINT., PRINT.,
+     READ(M, 1) .,
+     .FOR W = 0 .STEP 1 .UTNIL M-1 .DO .BEGIN
+          READ(MATRIX (. M*W .), M) .,
+          WRITE(MATRIX (. M*W .), M) .END .,
+     PRINT .,  T = DETERMINANT (MATRIX, M) .,
+     WRITE(T, 1) ., PRINT., PRINT .END
+.END PROGRAM
+\end{verbatim}
 
 
 \end{document}
